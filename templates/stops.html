@@ -33,7 +33,9 @@
       <br />
       <br />
 
-      <input placeholder="Syötä pysäkin nimi" type="text" id="stop">
+      <input placeholder="Syötä pysäkin tunnus" type="text" id="stop_id">
+      <input placeholder="Syötä pysäkin nimi" type="text" id="stop_name">
+      <button id="applyFilter" class="btn btn-primary btn-sm">Suodata</button>
 
       <br />
       <br />
@@ -80,19 +82,38 @@
         spiderfyOnMaxZoom: false
       });
 
-      $("#stop").change(function() {
+      $("#map").hide();
+      $("#showMap").click(function() {
+        $("#map").toggle("fast", function() {
+          if ($("#map").is(':hidden')) {
+            $("#tableDiv").show();
+          } else {
+            $("#tableDiv").hide();
+          }
+        });
+      });
+
+      $('#applyFilter').click(function() {
+        getStops();
+      })
+
+      function getStops() {
         $('#tableContent').empty();
         markers.clearLayers();
-        var value = $( this ).val();
 
-        if (!value.trim()) {
+        if (!$('#stop_id').val().trim() && !$('#stop_name').val().trim()) {
+          alert('Rajaa kyselyä!');
           map.panTo(new L.LatLng(LAT, LON));
           map.setZoom(ZOOM);
         } else {
           $.ajax({
             url: "/stops",
             type: "POST",
-            data: { stopName: value },
+            data: {
+              stopID: $('#stop_id').val(),
+              stopName: $('#stop_name').val()
+            },
+            timeout: 5000,
             cache: false,
 
             success: (res) => {
@@ -125,23 +146,16 @@
               }
             },
 
-            error: () => {
-              console.log('Tietojen hakemisessa sattui virhe');
+            error: (jqXHR, textStatus) => {
+              if (textStatus === "timeout") {
+                  alert("Pyynnössä kesti liian kauan");
+              } else {
+                  alert("Tietojen hakemisessa tapahtui virhe");
+              }
             }
           });
         }
-      });
-
-      $("#map").hide();
-      $("#showMap").click(function() {
-        $("#map").toggle("fast", function() {
-          if ($("#map").is(':hidden')) {
-            $("#tableDiv").show();
-          } else {
-            $("#tableDiv").hide();
-          }
-        });
-      });
+      }
      </script>
    </body>
  </html>
