@@ -16,7 +16,9 @@ class Application(tornado.web.Application):
             url(r"/routes", handlers.index.Routes),
             url(r"/stops", handlers.index.Stops),
             url(r"/trips", handlers.index.Trips),
-            url(r"/tripStops", handlers.index.TripStops)
+            url(r"/tripStops", handlers.index.TripStops),
+            url(r"/dates", handlers.index.Dates),
+            url(r"/stopTimes", handlers.index.StopTimes)
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

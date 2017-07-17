@@ -50,6 +50,7 @@
           <th>Pysäkin nimi</th>
           <th>LAT-koordinaatti</th>
           <th>LON-koordinaatti</th>
+          <th>Ohitusajat</th>
         </thead>
         <tbody id="tableContent">
         </tbody>
@@ -128,6 +129,7 @@
                       <td>${response[0][i].stop_name}</td>
                       <td>${response[0][i].stop_lat}</td>
                       <td>${response[0][i].stop_lon}</td>
+                      <td><a onclick="getTimes('${response[0][i].stop_id}');">Ohitusajat</a></td>
                     </tr>`
                   )
 
@@ -136,7 +138,8 @@
                     `<b>Stop ID: </b>${response[0][i].stop_id}<br />
                     <b>Stop name: </b>${response[0][i].stop_name}<br />
                     <b>LAT: </b>${response[0][i].stop_lat}<br />
-                    <b>LON: </b>${response[0][i].stop_lon}`
+                    <b>LON: </b>${response[0][i].stop_lon}<br />
+                    <a onclick="getTimes('${response[0][i].stop_id}');">Ohitusajat</a>`
                   );
                   markers.addLayer(marker);
                 }
@@ -155,6 +158,30 @@
             }
           });
         }
+      }
+
+      function getTimes(stop_id) {
+        $.ajax({
+          url: "/stopTimes",
+          type: "POST",
+          data: { stopID: stop_id },
+          timeout: 5000,
+          cache: false,
+
+          success: (res) => {
+            console.log('Kysely onnistui!');
+            response = JSON.parse("[" + res + "]")
+            console.log(response);
+          },
+
+          error: (jqXHR, textStatus) => {
+            if (textStatus === "timeout") {
+                alert("Pyynnössä kesti liian kauan");
+            } else {
+                alert("Tietojen hakemisessa tapahtui virhe");
+            }
+          }
+        });
       }
      </script>
    </body>

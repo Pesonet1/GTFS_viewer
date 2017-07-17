@@ -33,13 +33,18 @@
 
       #loading {
         position: absolute;
-        left: 50%;
         top: 50%;
+        left: 50%;
+        -moz-transform: translateX(-50%) translateY(-50%);
+        -webkit-transform: translateX(-50%) translateY(-50%);
+        transform: translateX(-50%) translateY(-50%);
       }
 
       #loadingDiv {
-        text-align: center;
-        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 60px;
         width: 200px;
         border: 1px solid;
         background-color: lightGrey;
@@ -81,6 +86,13 @@
 
     <div id="map"></div>
 
+    <div id="loading">
+      <!-- <img id="loadingImg" src="/spinner.gif"> -->
+      <div id="loadingDiv">
+        <h4>Haetaan aineistoja...<h4>
+      </div>
+    </div>
+
     <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content" id="modalFlow">
@@ -92,6 +104,8 @@
               <thead>
                 <th>Matkan ID</th>
                 <th>Matkan päämäärä</th>
+                <th>Matkan pysäkit</th>
+                <th>Matkan päivämäärät</th>
               </thead>
               <tbody id="tripTable">
               </tbody>
@@ -101,13 +115,6 @@
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <div id="loading">
-      <!-- <img id="loadingImg" src="/spinner.gif"> -->
-      <div id="loadingDiv">
-        <h4>Haetaan aineistoja...<h4>
       </div>
     </div>
 
@@ -238,8 +245,10 @@
               for (i = 0; i < response[0].length; i++) {
                 $("#tripTable").append(
                   `<tr>
-                    <td><a onclick="getStops('${response[0][i].trip_id}');">${response[0][i].trip_id}</a></td>
+                    <td>${response[0][i].trip_id}</td>
                     <td>${response[0][i].trip_headsign}</td>
+                    <td><a onclick="getStops('${response[0][i].trip_id}');">Pysäkit</a></td>
+                    <td><a onclick="getDates('${response[0][i].trip_id}');">Päivämäärät</a></td>
                   </tr>`
                 )
               }
@@ -299,6 +308,30 @@
 
               $("#map").show();
             }
+          },
+
+          error: (jqXHR, textStatus) => {
+            if (textStatus === "timeout") {
+                alert("Pyynnössä kesti liian kauan");
+            } else {
+                alert("Tietojen hakemisessa tapahtui virhe");
+            }
+          }
+        });
+      }
+
+      function getDates(trip_id) {
+        $.ajax({
+          url: "/dates",
+          type: "POST",
+          data: { tripID: trip_id },
+          timeout: 5000,
+          cache: false,
+
+          success: (res) => {
+            console.log('Kysely onnistui!');
+            response = JSON.parse("[" + res + "]");
+            console.log(response);
           },
 
           error: (jqXHR, textStatus) => {

@@ -71,9 +71,6 @@ class Stops(tornado.web.RequestHandler):
         self.write(json.dumps(data))
 
 class Trips(tornado.web.RequestHandler):
-    def get(self):
-        print
-
     def post(self):
         queryParam = self.get_argument("routeID").encode('utf-8')
         response = executeTripQuery(queryParam)
@@ -87,9 +84,6 @@ class Trips(tornado.web.RequestHandler):
         self.write(json.dumps(data))
 
 class TripStops(tornado.web.RequestHandler):
-    def get(self):
-        print
-
     def post(self):
         queryParam = self.get_argument("tripID").encode('utf-8')
         response = executeTripStopsQuery(queryParam)
@@ -102,6 +96,33 @@ class TripStops(tornado.web.RequestHandler):
             item['stop_lon'] = d
             item['stop_sequence'] = e
             item['shape_dist_traveled'] = f
+            data.append(item)
+
+        self.write(json.dumps(data))
+
+class Dates(tornado.web.RequestHandler):
+    def post(self):
+        queryParam = self.get_argument("tripID").encode('utf-8')
+        response = executeDateQuery(queryParam)
+        data = []
+        for a, b in response:
+            item = {}
+            item['trip_id'] = a
+            item['date'] = b
+            data.append(item)
+
+        self.write(json.dumps(data))
+
+class StopTimes(tornado.web.RequestHandler):
+    def post(self):
+        queryParam = self.get_argument("stopID").encode('utf-8')
+        response = executeStopTimesQuery(queryParam)
+        data = []
+        for a, b, c in response:
+            item = {}
+            item['stop_id'] = a
+            item['arrival_time'] = b
+            item['departure_time'] = c
             data.append(item)
 
         self.write(json.dumps(data))
@@ -184,6 +205,45 @@ def executeStopQuery(queryParam1, queryParam2):
             WHERE stop_id LIKE '%{0}%' AND stop_name LIKE '%{1}%'
             ORDER BY stop_id
         """.format(queryParam1, queryParam2))
+        result = cursorobj.fetchall()
+        connection.commit()
+    except Exception:
+            raise
+
+    connection.close()
+    return result
+
+def executeDateQuery(queryParam):
+    dbPath = "db.sqlite"
+    connection = sqlite3.connect(dbPath)
+    cursorobj = connection.cursor()
+
+    try:
+        cursorobj.execute("""
+            SELECT trips.trip_id, calendar_dates.date
+            FROM trips
+            INNER JOIN calendar_dates ON trips.service_id = calendar_dates.service_id
+            WHERE trips.trip_id IS '{0}'
+        """.format(queryParam))
+        result = cursorobj.fetchall()
+        connection.commit()
+    except Exception:
+            raise
+
+    connection.close()
+    return result
+
+def executeStopTimesQuery(queryParam):
+    dbPath = "db.sqlite"
+    connection = sqlite3.connect(dbPath)
+    cursorobj = connection.cursor()
+
+    try:
+        cursorobj.execute("""
+            SELECT stop_times.stop_id, stop_times.arrival_time, stop_times.departure_time
+            FROM stop_times
+            WHERE stop_times.stop_id IS '{0}'
+        """.format(queryParam))
         result = cursorobj.fetchall()
         connection.commit()
     except Exception:
