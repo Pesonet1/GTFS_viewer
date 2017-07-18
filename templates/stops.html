@@ -50,7 +50,6 @@
           <th>Pysäkin nimi</th>
           <th>LAT-koordinaatti</th>
           <th>LON-koordinaatti</th>
-          <th>Ohitusajat</th>
         </thead>
         <tbody id="tableContent">
         </tbody>
@@ -78,7 +77,7 @@
       map.setZoom(ZOOM);
 
       var markers = L.markerClusterGroup({
-        showCoverageOnHover: true,
+        showCoverageOnHover: false,
         zoomToBoundsOnClick: true,
         spiderfyOnMaxZoom: false
       });
@@ -129,17 +128,15 @@
                       <td>${response[0][i].stop_name}</td>
                       <td>${response[0][i].stop_lat}</td>
                       <td>${response[0][i].stop_lon}</td>
-                      <td><a onclick="getTimes('${response[0][i].stop_id}');">Ohitusajat</a></td>
                     </tr>`
                   )
 
                   var marker = L.marker([response[0][i].stop_lat, response[0][i].stop_lon]);
                   marker.bindPopup(
-                    `<b>Stop ID: </b>${response[0][i].stop_id}<br />
-                    <b>Stop name: </b>${response[0][i].stop_name}<br />
-                    <b>LAT: </b>${response[0][i].stop_lat}<br />
-                    <b>LON: </b>${response[0][i].stop_lon}<br />
-                    <a onclick="getTimes('${response[0][i].stop_id}');">Ohitusajat</a>`
+                    `<b>Pysäkin tunnus: </b>${response[0][i].stop_id}<br />
+                    <b>Pysäkin nimi: </b>${response[0][i].stop_name}<br />
+                    <b>Lat-koordinaatti: </b>${response[0][i].stop_lat}<br />
+                    <b>Lon-koordinaatti: </b>${response[0][i].stop_lon}<br />`
                   );
                   markers.addLayer(marker);
                 }
@@ -158,30 +155,6 @@
             }
           });
         }
-      }
-
-      function getTimes(stop_id) {
-        $.ajax({
-          url: "/stopTimes",
-          type: "POST",
-          data: { stopID: stop_id },
-          timeout: 5000,
-          cache: false,
-
-          success: (res) => {
-            console.log('Kysely onnistui!');
-            response = JSON.parse("[" + res + "]")
-            console.log(response);
-          },
-
-          error: (jqXHR, textStatus) => {
-            if (textStatus === "timeout") {
-                alert("Pyynnössä kesti liian kauan");
-            } else {
-                alert("Tietojen hakemisessa tapahtui virhe");
-            }
-          }
-        });
       }
      </script>
    </body>

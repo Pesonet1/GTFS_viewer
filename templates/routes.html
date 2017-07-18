@@ -87,7 +87,6 @@
     <div id="map"></div>
 
     <div id="loading">
-      <!-- <img id="loadingImg" src="/spinner.gif"> -->
       <div id="loadingDiv">
         <h4>Haetaan aineistoja...<h4>
       </div>
@@ -179,6 +178,9 @@
           alert('Rajaa kyselyä!');
           map.panTo(new L.LatLng(LAT, LON));
           map.setZoom(ZOOM);
+          markers.clearLayers();
+          map.removeLayer(polyline);
+
         } else {
           $.ajax({
             url: "/routes",
@@ -189,7 +191,7 @@
               routeProvider: $('#route_provider').val(),
               routeShort: $('#route_short').val()
             },
-            timeout: 5000,
+            timeout: 10000,
             cache: false,
 
             success: (res) => {
@@ -199,6 +201,7 @@
 
               console.log('Kysely onnistui!')
               response = JSON.parse("[" + res + "]")
+              console.log(response);
 
               if (response[0].length !== 0) {
                 for (i = 0; i < response[0].length; i++) {
@@ -231,7 +234,7 @@
           url: "/trips",
           type: "POST",
           data: { routeID: route_id },
-          timeout: 5000,
+          timeout: 10000,
           cache: false,
 
           success: (res) => {
@@ -240,6 +243,7 @@
 
             console.log('Kysely onnistui!');
             response = JSON.parse("[" + res + "]");
+            console.log(response);
 
             if (response[0].length !== 0) {
               for (i = 0; i < response[0].length; i++) {
@@ -247,7 +251,7 @@
                   `<tr>
                     <td>${response[0][i].trip_id}</td>
                     <td>${response[0][i].trip_headsign}</td>
-                    <td><a onclick="getStops('${response[0][i].trip_id}');">Pysäkit</a></td>
+                    <td><a onclick="getStops('${response[0][i].trip_id}', '${response[0][i].trip_headsign}');">Pysäkit</a></td>
                     <td><a onclick="getDates('${response[0][i].trip_id}');">Päivämäärät</a></td>
                   </tr>`
                 )
@@ -265,7 +269,7 @@
         });
       }
 
-      function getStops(trip_id) {
+      function getStops(trip_id, trip_headsign) {
         $('#modal').modal('hide');
 
         markers.clearLayers();
@@ -275,7 +279,7 @@
           url: "/tripStops",
           type: "POST",
           data: { tripID: trip_id },
-          timeout: 5000,
+          timeout: 10000,
           cache: false,
 
           success: (res) => {
@@ -283,19 +287,52 @@
 
             console.log('Kysely onnistui!');
             response = JSON.parse("[" + res + "]");
-
+            console.log(response);
             var latlngs = Array();
 
             if (response[0].length !== 0) {
               for (i = 0; i < response[0].length; i++) {
                 var marker = L.marker([response[0][i].stop_lat, response[0][i].stop_lon]);
+
+                var aHours = 0; var dHours = 0;
+                var aMinutes = 0; var dMinutes = 0;
+
+                if (response[0][i].arrival_time !== null) {
+                  aMinutes = response[0][i].arrival_time / 60;
+                  aHours = Math.floor(aMinutes / 60);
+                  if (aHours >= 24) { aHours = aHours - 24; }
+                  aMinutes = Math.ceil((aMinutes / 60 - Math.floor(aMinutes / 60)) * 60)
+                  if (aMinutes < 10 ) { aMinutes = '0' + aMinutes.toString() }
+                } else {
+                  aHours = '-'; aMinutes = '-';
+                }
+
+                if (response[0][i].departure_time !== null) {
+                  dMinutes = response[0][i].departure_time / 60;
+                  dHours = Math.floor(dMinutes / 60);
+                  if (dHours >= 24) { dHours = dHours - 24; }
+                  dMinutes = Math.ceil((dMinutes / 60 - Math.floor(dMinutes / 60)) * 60)
+                  if (dMinutes < 10) { dMinutes = '0' + dMinutes.toString(); }
+                } else {
+                  dHours = '-'; dMinutes = '-';
+                }
+
+                var dec = (response[0][i].shape_dist_traveled / 1000 - Math.floor(response[0][i].shape_dist_traveled / 1000)).toString().substring(1, 5);
+                var distance = Math.floor(Math.floor(response[0][i].shape_dist_traveled / 1000)).toString() + dec;
+
                 marker.bindPopup(
-                  `<b>Stop ID: </b>${response[0][i].stop_id}<br />
-                  <b>Stop name: </b>${response[0][i].stop_name}<br />
-                  <b>Sequence no: </b>${response[0][i].stop_sequence}<br />
-                  <b>Distance traveled: </b>${response[0][i].shape_dist_traveled}<br />
-                  <b>LAT: </b>${response[0][i].stop_lat}<br />
-                  <b>LON: </b>${response[0][i].stop_lon}`
+                  `<b>Matkan tunniste: </b>${trip_id}<br />
+                  <b>Määränpää: </b>${trip_headsign}<br /><br />
+
+                  <b>Pysäkkiketju: </b>${response[0][i].stop_sequence}<br />
+                  <b>Taitettu matka: </b>${distance}km<br />
+                  <b>Saapumisaika: </b>${aHours}:${aMinutes}<br />
+                  <b>Lähtöaika: </b>${dHours}:${dMinutes}<br/><br />
+
+                  <b>Pysäkin tunniste: </b>${response[0][i].stop_id}<br />
+                  <b>Pysäkin nimi: </b>${response[0][i].stop_name}<br />
+                  <b>Lat-koordinaatti: </b>${response[0][i].stop_lat}<br />
+                  <b>Lon-koordinaatti: </b>${response[0][i].stop_lon}<br />`
                 );
                 latlngs.push(marker.getLatLng());
                 markers.addLayer(marker);
@@ -343,6 +380,33 @@
           }
         });
       }
+
+      // function getTimes(trip_id, stop_id) {
+      //   $.ajax({
+      //     url: "/stopTimes",
+      //     type: "POST",
+      //     data: {
+      //       tripID: trip_id,
+      //       stopID: stop_id
+      //     },
+      //     timeout: 5000,
+      //     cache: false,
+      //
+      //     success: (res) => {
+      //       console.log('Kysely onnistui!');
+      //       response = JSON.parse("[" + res + "]")
+      //       console.log(response);
+      //     },
+      //
+      //     error: (jqXHR, textStatus) => {
+      //       if (textStatus === "timeout") {
+      //           alert("Pyynnössä kesti liian kauan");
+      //       } else {
+      //           alert("Tietojen hakemisessa tapahtui virhe");
+      //       }
+      //     }
+      //   });
+      // }
     </script>
   </body>
 </html>
