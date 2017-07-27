@@ -56,9 +56,8 @@ class Routes(tornado.web.RequestHandler):
         try:
             cursorobj.execute("""
                 SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
-                FROM routes
-                INNER JOIN agency ON routes.agency_id = agency.agency_id
-                WHERE route_long_name LIKE '%{0}%' AND route_id LIKE '%{1}%' AND agency_name LIKE '%{2}%' AND route_short_name LIKE '%{3}%'
+                FROM routes, agency
+                WHERE routes.agency_id = agency.agency_id AND route_long_name LIKE '%{0}%' AND route_id LIKE '%{1}%' AND agency_name LIKE '%{2}%' AND route_short_name LIKE '%{3}%'
                 ORDER BY route_id, agency_name, route_short_name
             """.format(queryParam1, queryParam2, queryParam3, queryParam4))
             result = cursorobj.fetchall()
@@ -82,6 +81,7 @@ class Stops(tornado.web.RequestHandler):
         queryParam1 = self.get_argument("stopID").encode('utf-8')
         queryParam2 = self.get_argument("stopName").encode('utf-8')
         response = self.executeStopQuery(queryParam1, queryParam2)
+
         data = []
         for a, b, c, d in response:
             item = {}
@@ -90,8 +90,6 @@ class Stops(tornado.web.RequestHandler):
             item['stop_lat'] = c
             item['stop_lon'] = d
             data.append(item)
-        # queryStops = json.dumps(data)
-        # queryStops = json.loads(queryRoutes)
 
         self.write(json.dumps(data))
 
@@ -111,6 +109,76 @@ class Stops(tornado.web.RequestHandler):
             connection.commit()
         except Exception:
                 raise
+
+        connection.close()
+        return result
+
+
+class StopRoutes(tornado.web.RequestHandler):
+    def post(self):
+        queryParam1 = self.get_argument("stopID").encode('utf-8')
+        stopRoutes = self.executeStopRouteQuery(queryParam1)
+
+        stoproute_data = []
+        for a, b in stopRoutes:
+            item = {}
+            item['route_id'] = a
+            item['trip_id'] = b
+            stoproute_data.append(item)
+
+        self.write(json.dumps(stoproute_data))
+
+    def executeStopRouteQuery(self, queryParam1):
+        dbPath = "db.sqlite"
+        connection = sqlite3.connect(dbPath)
+        cursorobj = connection.cursor()
+
+        try:
+            cursorobj.execute("""
+                SELECT trips.route_id, trips.trip_id
+                FROM stop_times, trips
+                WHERE trips.trip_id = stop_times.trip_id
+                    AND stop_id IS '{0}'
+            """.format(queryParam1))
+            result = cursorobj.fetchall()
+            connection.commit()
+        except Exception:
+            raise
+
+        connection.close()
+        return result
+
+
+class StopPassingTimes(tornado.web.RequestHandler):
+    def post(self):
+        queryParam = self.get_argument("stopID").encode('utf-8')
+        passTimes = self.executeStopPasstimeQuery(queryParam)
+
+        passtimes_data = []
+        for a, b, c in passTimes:
+            item = {}
+            item['stop_id'] = a
+            item['arrival_time'] = b
+            item['departure_time'] = c
+            passtimes_data.append(item)
+
+        self.write(json.dumps(passtimes_data))
+
+    def executeStopPasstimeQuery(self, queryParam):
+        dbPath = "db.sqlite"
+        connection = sqlite3.connect(dbPath)
+        cursorobj = connection.cursor()
+
+        try:
+            cursorobj.execute("""
+                SELECT stop_id, arrival_time, departure_time
+                FROM stop_times
+                WHERE stop_id IS '{0}'
+            """.format(queryParam))
+            result = cursorobj.fetchall()
+            connection.commit()
+        except Exception:
+            raise
 
         connection.close()
         return result
@@ -204,9 +272,8 @@ class TripStops(tornado.web.RequestHandler):
         try:
             cursorobj.execute("""
                 SELECT stops.stop_id, stops.stop_name, stops.stop_lat, stops.stop_lon, stop_times.stop_sequence, stop_times.shape_dist_traveled, stop_times.trip_id, stop_times.arrival_time, stop_times.departure_time
-                FROM stop_times
-                INNER JOIN stops ON stop_times.stop_id = stops.stop_id
-                WHERE stop_times.trip_id IS '{0}'
+                FROM stop_times, stops
+                WHERE stop_times.stop_id = stops.stop_id AND stop_times.trip_id IS '{0}'
             """.format(queryParam))
             result = cursorobj.fetchall()
             connection.commit()
@@ -238,9 +305,8 @@ class Dates(tornado.web.RequestHandler):
         try:
             cursorobj.execute("""
                 SELECT trips.trip_id, calendar_dates.date
-                FROM trips
-                INNER JOIN calendar_dates ON trips.service_id = calendar_dates.service_id
-                WHERE trips.trip_id IS '{0}'
+                FROM trips, calendar_dates
+                WHERE trips.service_id = calendar_dates.service_id AND trips.trip_id IS '{0}'
                 ORDER BY calendar_dates.date
             """.format(queryParam))
             result = cursorobj.fetchall()

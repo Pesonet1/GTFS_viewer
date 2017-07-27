@@ -16,11 +16,34 @@
         height: 125px;
       }
 
+      #tableDiv {
+        margin: 5px;
+      }
+
       #map {
         position: absolute;
         width: 100%;
         height: calc(100% - 130px);
         bottom: 0px;
+      }
+
+      #loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        -moz-transform: translateX(-50%) translateY(-50%);
+        -webkit-transform: translateX(-50%) translateY(-50%);
+        transform: translateX(-50%) translateY(-50%);
+      }
+
+      #loadingDiv {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 60px;
+        width: 200px;
+        border: 1px solid;
+        background-color: lightGrey;
       }
     </style>
   </head>
@@ -43,21 +66,44 @@
 
     <div id="map"></div>
 
+    <div id="loading">
+      <div id="loadingDiv">
+        <h4>Haetaan aineistoja...<h4>
+      </div>
+    </div>
+
     <div id="tableDiv">
       <table class="table">
         <thead>
-          <th>Pysäkin ID</th>
-          <th>Pysäkin nimi</th>
+          <th>ID</th>
+          <th>Nimi</th>
           <th>LAT-koordinaatti</th>
           <th>LON-koordinaatti</th>
+          <th>Näytä kartalla</th>
         </thead>
         <tbody id="tableContent">
         </tbody>
       </table>
     </div>
 
+    <div class="modal fade" id="calendarModal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content" id="calendarModalFlow">
+          <div class="modal-header">
+            <h3 class="modal-title">Pysäkin kautta kulkevat reitit</h5>
+          </div>
+          <div class="modal-body" id="calendarModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Sulje</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src='static/js/jquery-2.2.4.min.js'></script>
     <script src='static/js/bootstrap.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.1.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.0.6/leaflet.markercluster.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.0.6/leaflet.markercluster-src.js"></script>
@@ -66,7 +112,7 @@
       var LAT = 65.304401;
       var LON = 24.301758;
       var ZOOM = 5;
-      var TIMEOUT = 15000;
+      var TIMEOUT = 30000;
 
       var map = L.map('map').setView([51.505, -0.09], 13);
 
@@ -77,9 +123,9 @@
         id: 'hsl-map'
       }).addTo(map);
 
-      map.panTo(new L.LatLng(LAT, LON));
-      map.setZoom(ZOOM);
+      map.setView(new L.LatLng(LAT, LON), ZOOM);
 
+      var mrks = {}
       var markers = L.markerClusterGroup({
         showCoverageOnHover: false,
         zoomToBoundsOnClick: true,
@@ -87,6 +133,8 @@
       });
 
       $("#map").hide();
+      $('#loading').hide();
+
       $("#showMap").click(function() {
         $("#map").toggle("fast", function() {
           if ($("#map").is(':hidden')) {
@@ -95,6 +143,16 @@
             $("#tableDiv").hide();
           }
         });
+      });
+
+      jQuery.ajaxSetup({
+        beforeSend: function() {
+          $('#loading').show();
+        },
+        complete: function() {
+          $('#loading').hide();
+        },
+        success: function() {}
       });
 
       $('#applyFilter').click(function() {
@@ -107,8 +165,7 @@
 
         if (!$('#stop_id').val().trim() && !$('#stop_name').val().trim()) {
           alert('Rajaa kyselyä!');
-          map.panTo(new L.LatLng(LAT, LON));
-          map.setZoom(ZOOM);
+          map.setView(new L.LatLng(LAT, LON), ZOOM);
         } else {
           $.ajax({
             url: "/stops",
@@ -123,8 +180,11 @@
             success: (res) => {
               console.log('Kysely onnistui!');
               response = JSON.parse("[" + res + "]")
+              console.log(response);
 
               if (response[0].length !== 0) {
+                marks = {};
+
                 for (i = 0; i < response[0].length; i++) {
                   $("#tableContent").append(
                     `<tr>
@@ -132,17 +192,24 @@
                       <td>${response[0][i].stop_name}</td>
                       <td>${response[0][i].stop_lat}</td>
                       <td>${response[0][i].stop_lon}</td>
+                      <td><a onclick="showStopOnMap('${response[0][i].stop_id}');">Näytä kartalla</a></td>
                     </tr>`
                   )
 
                   var marker = L.marker([response[0][i].stop_lat, response[0][i].stop_lon]);
+
                   marker.bindPopup(
                     `<b>Pysäkin tunnus: </b>${response[0][i].stop_id}<br />
-                    <b>Pysäkin nimi: </b>${response[0][i].stop_name}<br />
+                    <b>Pysäkin nimi: </b>${response[0][i].stop_name}<br /><br />
                     <b>Lat-koordinaatti: </b>${response[0][i].stop_lat}<br />
-                    <b>Lon-koordinaatti: </b>${response[0][i].stop_lon}<br />`
+                    <b>Lon-koordinaatti: </b>${response[0][i].stop_lon}<br /><br />
+                    <a onclick="getStopRoutes('${response[0][i].stop_id}');">Pysäkin kautta kulkevat reitit</a><br/>
+                    <a onclick="getPassingTimes('${response[0][i].stop_id}');">Pysäkin ohitusajat</a>`,
+                    { minWidth: 350, minHeight: 400 }
                   );
+
                   markers.addLayer(marker);
+                  mrks[response[0][i].stop_id] = marker;
                 }
 
                 map.addLayer(markers);
@@ -159,6 +226,79 @@
             }
           });
         }
+      }
+
+      function showStopOnMap(markerId) {
+        $("#map").show();
+        $("#tableDiv").hide();
+        map.closePopup();
+        map.setView(new L.LatLng(mrks[markerId]._latlng.lat, mrks[markerId]._latlng.lng), 18);
+        setTimeout(() => {
+          mrks[markerId].openPopup();
+        }, 500);
+
+      }
+
+      function getStopRoutes(stop_id) {
+        $.ajax({
+          url: "/stopRoutes",
+          type: "POST",
+          data: {
+            stopID: stop_id
+          },
+          timeout: TIMEOUT,
+          cache: false,
+
+          success: (res) => {
+            $('#calendarModal').modal('show');
+
+            console.log('Kysely onnistui!');
+            response = JSON.parse("[" + res + "]")
+            console.log(response);
+
+            if (response[0].length !== 0) {
+            }
+          },
+
+          error: (jqXHR, textStatus) => {
+            if (textStatus === "timeout") {
+                alert("Pyynnössä kesti liian kauan");
+            } else {
+                alert("Tietojen hakemisessa tapahtui virhe");
+            }
+          }
+        });
+      }
+
+      function getPassingTimes(stop_id) {
+        $.ajax({
+          url: "/stopPassingTimes",
+          type: "POST",
+          data: {
+            stopID: stop_id,
+          },
+          timeout: TIMEOUT,
+          cache: false,
+
+          success: (res) => {
+            $('#calendarModal').modal('show');
+
+            console.log('Kysely onnistui!');
+            response = JSON.parse("[" + res + "]")
+            console.log(response);
+
+            if (response[0].length !== 0) {
+            }
+          },
+
+          error: (jqXHR, textStatus) => {
+            if (textStatus === "timeout") {
+                alert("Pyynnössä kesti liian kauan");
+            } else {
+                alert("Tietojen hakemisessa tapahtui virhe");
+            }
+          }
+        });
       }
      </script>
    </body>

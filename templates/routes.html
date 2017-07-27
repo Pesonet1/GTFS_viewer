@@ -41,7 +41,7 @@
       }
 
       #loading {
-        position: absolute;
+        position: fixed;
         top: 50%;
         left: 50%;
         -moz-transform: translateX(-50%) translateY(-50%);
@@ -377,6 +377,7 @@
               for (i = 0; i < response[0].length; i++) {
                 var aHours = 0; var dHours = 0;
                 var aMinutes = 0; var dMinutes = 0;
+                var newIcon = null;
 
                 if (response[0][i].arrival_time !== null) {
                   aMinutes = response[0][i].arrival_time / 60;
@@ -400,8 +401,6 @@
 
                 var dec = (response[0][i].shape_dist_traveled / 1000 - Math.floor(response[0][i].shape_dist_traveled / 1000)).toString().substring(1, 5);
                 var distance = Math.floor(Math.floor(response[0][i].shape_dist_traveled / 1000)).toString() + dec;
-
-                var newIcon = null;
 
                 if (i === 0) {
                   newIcon = new L.Icon({
