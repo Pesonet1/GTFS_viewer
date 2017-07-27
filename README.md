@@ -7,7 +7,7 @@ Functions that are used for reading GTFS are from this repository https://github
 - Python
 - Tornado (web server)
 - sqlite3
-- gtfslib-python (reads GTFS to db + extra functionalities)
+- gtfslib-python
 - jQuery
 - Leaflet
 - Leaflet.markercluster
