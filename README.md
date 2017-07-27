@@ -2,14 +2,18 @@
 
 Functions that are used for reading GTFS are from this repository https://github.com/afimb/gtfslib-python
 
-# Used technologies
+# Used technologies / libraries
 
 - Python
-- jQuery
 - Tornado (web server)
-- gtfslib-python (reads GTFS to db + extra functionalities)
 - sqlite3
+- gtfslib-python (reads GTFS to db + extra functionalities)
+- jQuery
 - Leaflet
+- Leaflet.markercluster
+- Leaflet-color-markers
+- Moment
+- Bootstrap
 
 # Usage / install
 
