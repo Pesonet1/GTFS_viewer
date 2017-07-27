@@ -120,7 +120,7 @@ class Trips(tornado.web.RequestHandler):
     def post(self):
         queryParam = self.get_argument("routeID").encode('utf-8')
         trips = self.executeTripQuery(queryParam)
-        urls = self.getKoontikantaUrl()
+        # urls = self.getKoontikantaUrl()
 
         trip_data = []
         for a, b in trips:
@@ -129,11 +129,11 @@ class Trips(tornado.web.RequestHandler):
             item['trip_headsign'] = b
             trip_data.append(item)
 
-        url_data = []
-        for a in urls:
-            item = {}
-            item['vuoron_url_interpoloitu'] = a
-            url_data.append(item)
+        # url_data = []
+        # for a in urls:
+        #     item = {}
+        #     item['vuoron_url_interpoloitu'] = a
+        #     url_data.append(item)
 
         # print url_data
 

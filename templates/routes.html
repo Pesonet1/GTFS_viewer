@@ -27,9 +27,10 @@
       }
 
       #calendarModalFlow {
-        height: 600px;
+        height: 435px;
         width: 1200px;
         margin-left: -300px;
+        overflow-y: auto;
       }
 
       #map {
@@ -58,6 +59,16 @@
         background-color: lightGrey;
       }
 
+      #calendarModalBody {
+        position: relative;
+        width: 100%;
+        height: 300px;
+      }
+
+      #calendarTable {
+        margin: 5px 0 20px 0;
+      }
+
       #calendarTable tr {
         display: inline-block;
       }
@@ -70,7 +81,7 @@
         width: 85px !important;
       }
 
-      #calendarHead th {
+      [id^=calendarHead] th {
         display: inline-block;
         width: 25px;
         height: 25px;
@@ -82,7 +93,7 @@
         vertical-align: middle;
       }
 
-      #calendarBody td {
+      [id^=calendarBody] td {
         display: inline-block;
         width: 25px;
         height: 25px;
@@ -193,7 +204,7 @@
       var LAT = 65.304401;
       var LON = 24.301758;
       var ZOOM = 5;
-      var TIMEOUT = 15000;
+      var TIMEOUT = 30000;
 
       var map = L.map('map').setView([51.505, -0.09], 13);
 
@@ -212,9 +223,8 @@
         zoomToBoundsOnClick: true,
         spiderfyOnMaxZoom: false
       });
-      var polyline = L.polyline({
-
-      });
+      var polyline = L.polyline({ });
+      var startEndMarkers = L.layerGroup();
 
       $("#map").hide();
       $('#loading').hide();
@@ -345,6 +355,7 @@
         $('#tripModal').modal('hide');
 
         markers.clearLayers();
+        startEndMarkers.clearLayers();
         map.removeLayer(polyline);
 
         $.ajax({
@@ -364,8 +375,6 @@
 
             if (response[0].length !== 0) {
               for (i = 0; i < response[0].length; i++) {
-                var marker = L.marker([response[0][i].stop_lat, response[0][i].stop_lon]);
-
                 var aHours = 0; var dHours = 0;
                 var aMinutes = 0; var dMinutes = 0;
 
@@ -392,6 +401,36 @@
                 var dec = (response[0][i].shape_dist_traveled / 1000 - Math.floor(response[0][i].shape_dist_traveled / 1000)).toString().substring(1, 5);
                 var distance = Math.floor(Math.floor(response[0][i].shape_dist_traveled / 1000)).toString() + dec;
 
+                var newIcon = null;
+
+                if (i === 0) {
+                  newIcon = new L.Icon({
+                  	iconUrl: '../static/img/marker-icon-green.png',
+                  	iconSize: [25, 41],
+                  	iconAnchor: [12, 41],
+                  	popupAnchor: [1, -34],
+                  	shadowSize: [41, 41]
+                  });
+                } else if (i === response[0].length - 1) {
+                  newIcon = new L.Icon({
+                  	iconUrl: '../static/img/marker-icon-red.png',
+                  	iconSize: [25, 41],
+                  	iconAnchor: [12, 41],
+                  	popupAnchor: [1, -34],
+                  	shadowSize: [41, 41]
+                  });
+                } else {
+                  newIcon = new L.Icon({
+                  	iconUrl: '../static/img/marker-icon-blue.png',
+                  	iconSize: [25, 41],
+                  	iconAnchor: [12, 41],
+                  	popupAnchor: [1, -34],
+                  	shadowSize: [41, 41]
+                  });
+                }
+
+                var marker = L.marker([response[0][i].stop_lat, response[0][i].stop_lon], { icon: newIcon });
+
                 marker.bindPopup(
                   `<b>Matkan tunniste: </b>${trip_id}<br />
                   <b>Määränpää: </b>${trip_headsign}<br /><br />
@@ -407,13 +446,21 @@
                   <b>Lon-koordinaatti: </b>${response[0][i].stop_lon}<br />`
                 );
                 latlngs.push(marker.getLatLng());
-                markers.addLayer(marker);
+
+                if (i === 0 || i === response[0].length - 1) {
+                  marker.addTo(startEndMarkers);
+                } else {
+                  markers.addLayer(marker);
+                }
+
               }
 
-              polyline = L.polyline(latlngs, {color: 'blue'}).addTo(map);
+              polyline = L.polyline(latlngs, { color: '#337ab7', smoothFactor: 0.1 }).addTo(map);
               map.fitBounds(polyline.getBounds());
+              // map.setZoom(map.getZoom() - 1);
 
               map.addLayer(markers);
+              map.addLayer(startEndMarkers);
 
               $("#map").show();
             }
@@ -446,86 +493,69 @@
               $('#calendarModal').modal('show');
               $('#calendarModalBody').empty();
 
-              var firstDate = moment(response[0][0].date); var firstYear = moment(response[0][0].date).get('year'); var firstMonth = moment(response[0][0].date).get('month') + 1;
-              var lastDate = moment(response[0][response[0].length - 1].date); var lastYear = moment(response[0][response[0].length - 1].date).get('year'); var lastMonth = moment(response[0][response[0].length - 1].date).get('month') + 1;
-
-              console.log(response[0][0].date, firstDate, firstYear, firstMonth, response[0][response[0].length - 1].date, lastDate, lastYear, lastMonth, moment(response[0][response[0].length - 1].date).get('date'));
-
+              var firstYear = moment(response[0][0].date).get('year'); var firstMonth = moment(response[0][0].date).get('month') + 1;
+              var lastYear = moment(response[0][response[0].length - 1].date).get('year'); var lastMonth = moment(response[0][response[0].length - 1].date).get('month') + 1;
               var dayNames = ['ma', 'ti', 'ke', 'to', 'pe', 'la', 'su'];
-
+              var monthNames = ['Tammikuu', 'Helmikuu', 'Maaliskuu', 'Huuhtikuu', 'Toukokuu', 'Kesäkuu', 'Heinäkuu', 'Elokuu', 'Syyskuu', 'Lokakuu', 'Marraskuu', 'Joulukuu'];
               var table = document.getElementById('calendarModalBody');
 
-              // TODO check year also... if year changes make a new grid
-              table.innerHTML = '<table id="calendarTable"><thead id="calendarHead"></thead><tbody id="calendarBody"></tbody></table>'
+              for (year = 0; year <= (lastYear - firstYear); year++) {
+                table.innerHTML += `<table id="calendarTable"><thead id="calendarHead${year}"></thead><tbody id="calendarBody${year}"></tbody></table>`
 
-              $("#calendarHead").append(
-                `<tr id="head"><th id="headInfo">${firstYear}</th></tr>`
-              )
-
-              for (i = 0; i < 38; i++) {
-                $("#head").append(
-                  `<th>
-                    ${dayNames[i % dayNames.length]}
-                  </th>`
-                )
-              }
-
-              for (m = firstMonth - 1; m < lastMonth; m++) {
-                var currentMonth = moment().month(m);
-                var monthDates = response[0].filter((date) => {
-                  var currentDate = moment(date.date);
-                  if (currentDate >= currentMonth.startOf('month') && currentDate <= currentMonth.endOf('month')) {
-                    return true;
-                  }
-
-                  return false;
-                });
-
-                console.log(monthDates);
-
-                $("#calendarBody").append(
-                  `<tr id="${m}"><td id="bodyInfo">${currentMonth.format('MMMM')}</td></tr>`
+                $(`#calendarHead${year}`).append(
+                  `<tr id="${firstYear + year}"><th id="headInfo">${firstYear + year}</th></tr>`
                 )
 
-                var offCount = 0;
-                for (i = 1; i < 39; ) {
-                  if (i >= currentMonth.startOf('month').day() && i <= (currentMonth.endOf('month').get('date') + offCount)) {
-                    foundCount = 0;
-                    for (j = 0; j < monthDates.length; j++) {
-                      var date = moment(monthDates[j].date).format('YYYY-MM-DD');
-                      var cdate = moment(currentMonth.date(i - offCount)).format('YYYY-MM-DD');
-                      // console.log(date, cdate);
-                      if (moment(date).isSame(cdate)) {
-                        $(`#${m}`).append(
-                          `<td id="markedDate">
-                            ${i - offCount + foundCount}
-                          </td>`
-                        )
-                        foundCount++;
-                        i++
-                        // console.log('yeah buddy!', i, offCount, foundCount);
-                        break;
-                      }
-                    }
-
-                    if (foundCount === 0) {
-                      $(`#${m}`).append(
-                        `<td id="unMarkedDate">
-                          ${i - offCount}
-                        </td>`
-                      )
-                      i++;
-                    }
-                  } else {
-                    offCount++;
-                    i++;
-                    $(`#${m}`).append(
-                      `<td id="blank">
-                      </td>`
-                    )
-                  }
+                for (j = 0; j < 38; j++) {
+                  $(`#${firstYear + year}`).append(`<th>${dayNames[j % dayNames.length]}</th>`)
                 }
-              }
+
+                for (m = firstMonth - 1; m < lastMonth; m++) {
+                  var currentMonth = moment().year(firstYear + year).month(m);
+                  var monthDates = response[0].filter((date) => {
+                    var currentDate = moment(date.date);
+                    if (currentDate >= currentMonth.startOf('month') && currentDate <= currentMonth.endOf('month')) {
+                      return true;
+                    }
+
+                    return false;
+                  });
+
+                  console.log('monthDates', monthDates);
+
+                  if (monthDates.length !== 0) {
+                    $(`#calendarBody${year}`).append(`<tr id="${m}${year}"><td id="bodyInfo">${monthNames[m]}</td></tr>`)
+
+                    var offCount = 0;
+                    for (i = 1; i < 39; ) {
+                      if (i >= currentMonth.startOf('month').day() && i <= (currentMonth.endOf('month').get('date') + offCount)) {
+                        foundCount = 0;
+                        for (j = 0; j < monthDates.length; j++) {
+                          var date = moment(monthDates[j].date).format('YYYY-MM-DD');
+                          var cdate = moment(currentMonth.date(i - offCount)).format('YYYY-MM-DD');
+
+                          if (moment(date).isSame(cdate)) {
+                            $(`#${m}${year}`).append(`<td id="markedDate">${i - offCount + foundCount}</td>`)
+                            foundCount++;
+                            i++
+                            break;
+                          }
+                        }
+
+                        if (foundCount === 0) {
+                          $(`#${m}${year}`).append(`<td id="unMarkedDate">${i - offCount}</td>`)
+                          i++;
+                        }
+                      } else {
+                        $(`#${m}${year}`).append(`<td id="blank"></td>`)
+                        offCount++;
+                        i++;
+                      }
+                    } // end of for day
+                  } // end of if
+
+                } // end of for month
+              } // end of for year
             } else {
               $('#calendarModal').modal('hide');
               alert('Reitin aikoja ei löytynyt!');
