@@ -19,9 +19,17 @@
         margin: 5px;
       }
 
-      #modalFlow {
+      #tripModalFlow {
         height: 600px;
+        width: 850px;
+        margin-left: -110px;
         overflow-y: auto;
+      }
+
+      #calendarModalFlow {
+        height: 600px;
+        width: 1200px;
+        margin-left: -300px;
       }
 
       #map {
@@ -48,6 +56,46 @@
         width: 200px;
         border: 1px solid;
         background-color: lightGrey;
+      }
+
+      #calendarTable tr {
+        display: inline-block;
+      }
+
+      #headInfo {
+        width: 85px !important;
+      }
+
+      #bodyInfo {
+        width: 85px !important;
+      }
+
+      #calendarHead th {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        background-color: lightgrey;
+        margin: 1px;
+        font-size: 14px;
+        text-align: center;
+        line-height: 25px;
+        vertical-align: middle;
+      }
+
+      #calendarBody td {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        background-color: lightgrey;
+        margin: 1px;
+        font-size: 14px;
+        text-align: center;
+        line-height: 25px;
+        vertical-align: middle;
+      }
+
+      #markedDate {
+        background-color: #6af76c !important;
       }
     </style>
   </head>
@@ -92,26 +140,43 @@
       </div>
     </div>
 
-    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="tripModal">
       <div class="modal-dialog" role="document">
-        <div class="modal-content" id="modalFlow">
+        <div class="modal-content" id="tripModalFlow">
           <div class="modal-header">
             <h3 class="modal-title">Reitin matkat</h5>
           </div>
-          <div class="modal-body" id="modalBody">
+          <div class="modal-body" id="tripModalBody">
             <table class="table">
               <thead>
-                <th>Matkan ID</th>
-                <th>Matkan päämäärä</th>
-                <th>Matkan pysäkit</th>
-                <th>Matkan päivämäärät</th>
+                <th>ID</th>
+                <th>Päämäärä</th>
+                <th>Aloitus</th>
+                <th>Lopetus</th>
+                <th>Pysäkit</th>
+                <th>Päivämäärät</th>
               </thead>
               <tbody id="tripTable">
               </tbody>
             </table>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Sulje</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="calendarModal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content" id="calendarModalFlow">
+          <div class="modal-header">
+            <h3 class="modal-title">Reitin ajat</h5>
+          </div>
+          <div class="modal-body" id="calendarModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Sulje</button>
           </div>
         </div>
       </div>
@@ -119,6 +184,7 @@
 
     <script src='static/js/jquery-2.2.4.min.js'></script>
     <script src='static/js/bootstrap.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.1.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.0.6/leaflet.markercluster.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.0.6/leaflet.markercluster-src.js"></script>
@@ -127,11 +193,15 @@
       var LAT = 65.304401;
       var LON = 24.301758;
       var ZOOM = 5;
+      var TIMEOUT = 15000;
 
       var map = L.map('map').setView([51.505, -0.09], 13);
 
-      L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+      L.tileLayer('http://api.digitransit.fi/map/v1/{id}/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+          '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ',
+        id: 'hsl-map'
       }).addTo(map);
 
       map.panTo(new L.LatLng(LAT, LON));
@@ -191,7 +261,7 @@
               routeProvider: $('#route_provider').val(),
               routeShort: $('#route_short').val()
             },
-            timeout: 10000,
+            timeout: TIMEOUT,
             cache: false,
 
             success: (res) => {
@@ -234,11 +304,11 @@
           url: "/trips",
           type: "POST",
           data: { routeID: route_id },
-          timeout: 10000,
+          timeout: TIMEOUT,
           cache: false,
 
           success: (res) => {
-            $('#modal').modal('show');
+            $('#tripModal').modal('show');
             $('#tripTable').empty();
 
             console.log('Kysely onnistui!');
@@ -251,6 +321,8 @@
                   `<tr>
                     <td>${response[0][i].trip_id}</td>
                     <td>${response[0][i].trip_headsign}</td>
+                    <td>xx:xx</td>
+                    <td>xx:xx</td>
                     <td><a onclick="getStops('${response[0][i].trip_id}', '${response[0][i].trip_headsign}');">Pysäkit</a></td>
                     <td><a onclick="getDates('${response[0][i].trip_id}');">Päivämäärät</a></td>
                   </tr>`
@@ -270,7 +342,7 @@
       }
 
       function getStops(trip_id, trip_headsign) {
-        $('#modal').modal('hide');
+        $('#tripModal').modal('hide');
 
         markers.clearLayers();
         map.removeLayer(polyline);
@@ -279,7 +351,7 @@
           url: "/tripStops",
           type: "POST",
           data: { tripID: trip_id },
-          timeout: 10000,
+          timeout: TIMEOUT,
           cache: false,
 
           success: (res) => {
@@ -362,13 +434,102 @@
           url: "/dates",
           type: "POST",
           data: { tripID: trip_id },
-          timeout: 5000,
+          timeout: TIMEOUT,
           cache: false,
 
           success: (res) => {
             console.log('Kysely onnistui!');
             response = JSON.parse("[" + res + "]");
             console.log(response);
+
+            if (response[0].length !== 0) {
+              $('#calendarModal').modal('show');
+              $('#calendarModalBody').empty();
+
+              var firstDate = moment(response[0][0].date); var firstYear = moment(response[0][0].date).get('year'); var firstMonth = moment(response[0][0].date).get('month') + 1;
+              var lastDate = moment(response[0][response[0].length - 1].date); var lastYear = moment(response[0][response[0].length - 1].date).get('year'); var lastMonth = moment(response[0][response[0].length - 1].date).get('month') + 1;
+
+              console.log(response[0][0].date, firstDate, firstYear, firstMonth, response[0][response[0].length - 1].date, lastDate, lastYear, lastMonth, moment(response[0][response[0].length - 1].date).get('date'));
+
+              var dayNames = ['ma', 'ti', 'ke', 'to', 'pe', 'la', 'su'];
+
+              var table = document.getElementById('calendarModalBody');
+
+              // TODO check year also... if year changes make a new grid
+              table.innerHTML = '<table id="calendarTable"><thead id="calendarHead"></thead><tbody id="calendarBody"></tbody></table>'
+
+              $("#calendarHead").append(
+                `<tr id="head"><th id="headInfo">${firstYear}</th></tr>`
+              )
+
+              for (i = 0; i < 38; i++) {
+                $("#head").append(
+                  `<th>
+                    ${dayNames[i % dayNames.length]}
+                  </th>`
+                )
+              }
+
+              for (m = firstMonth - 1; m < lastMonth; m++) {
+                var currentMonth = moment().month(m);
+                var monthDates = response[0].filter((date) => {
+                  var currentDate = moment(date.date);
+                  if (currentDate >= currentMonth.startOf('month') && currentDate <= currentMonth.endOf('month')) {
+                    return true;
+                  }
+
+                  return false;
+                });
+
+                console.log(monthDates);
+
+                $("#calendarBody").append(
+                  `<tr id="${m}"><td id="bodyInfo">${currentMonth.format('MMMM')}</td></tr>`
+                )
+
+                var offCount = 0;
+                for (i = 1; i < 39; ) {
+                  if (i >= currentMonth.startOf('month').day() && i <= (currentMonth.endOf('month').get('date') + offCount)) {
+                    foundCount = 0;
+                    for (j = 0; j < monthDates.length; j++) {
+                      var date = moment(monthDates[j].date).format('YYYY-MM-DD');
+                      var cdate = moment(currentMonth.date(i - offCount)).format('YYYY-MM-DD');
+                      // console.log(date, cdate);
+                      if (moment(date).isSame(cdate)) {
+                        $(`#${m}`).append(
+                          `<td id="markedDate">
+                            ${i - offCount + foundCount}
+                          </td>`
+                        )
+                        foundCount++;
+                        i++
+                        // console.log('yeah buddy!', i, offCount, foundCount);
+                        break;
+                      }
+                    }
+
+                    if (foundCount === 0) {
+                      $(`#${m}`).append(
+                        `<td id="unMarkedDate">
+                          ${i - offCount}
+                        </td>`
+                      )
+                      i++;
+                    }
+                  } else {
+                    offCount++;
+                    i++;
+                    $(`#${m}`).append(
+                      `<td id="blank">
+                      </td>`
+                    )
+                  }
+                }
+              }
+            } else {
+              $('#calendarModal').modal('hide');
+              alert('Reitin aikoja ei löytynyt!');
+            }
           },
 
           error: (jqXHR, textStatus) => {
@@ -380,33 +541,6 @@
           }
         });
       }
-
-      // function getTimes(trip_id, stop_id) {
-      //   $.ajax({
-      //     url: "/stopTimes",
-      //     type: "POST",
-      //     data: {
-      //       tripID: trip_id,
-      //       stopID: stop_id
-      //     },
-      //     timeout: 5000,
-      //     cache: false,
-      //
-      //     success: (res) => {
-      //       console.log('Kysely onnistui!');
-      //       response = JSON.parse("[" + res + "]")
-      //       console.log(response);
-      //     },
-      //
-      //     error: (jqXHR, textStatus) => {
-      //       if (textStatus === "timeout") {
-      //           alert("Pyynnössä kesti liian kauan");
-      //       } else {
-      //           alert("Tietojen hakemisessa tapahtui virhe");
-      //       }
-      //     }
-      //   });
-      // }
     </script>
   </body>
 </html>
