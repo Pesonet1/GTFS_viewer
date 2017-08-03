@@ -1,5 +1,7 @@
 /GTFS_data
 /unnecessary
 
+*.pyc
+
 db.sqlite
 vallu.sqlite

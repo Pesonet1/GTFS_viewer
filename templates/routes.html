@@ -23,6 +23,10 @@
         height: 600px;
         width: 850px;
         margin-left: -110px;
+      }
+
+      #tripModalBody {
+        height: 465px;
         overflow-y: auto;
       }
 
@@ -47,6 +51,7 @@
         -moz-transform: translateX(-50%) translateY(-50%);
         -webkit-transform: translateX(-50%) translateY(-50%);
         transform: translateX(-50%) translateY(-50%);
+        z-index: 1000;
       }
 
       #loadingDiv {
@@ -54,9 +59,13 @@
         align-items: center;
         justify-content: center;
         height: 60px;
-        width: 200px;
+        width: 220px;
         border: 1px solid;
-        background-color: lightGrey;
+        color: white;
+        background-color: #337ab7;
+        border-radius: 15px;
+        border: 1px solid #2e6da4;
+        padding: 20px;
       }
 
       #calendarModalBody {
