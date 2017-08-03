@@ -132,7 +132,7 @@
     <div id="tableDiv">
       <table class="table">
         <thead>
-          <th>Reitin ID</th>
+          <th>Tunnus</th>
           <th>Reitin tarjoaja</th>
           <th>Reitin lyhyt nimi</th>
           <th>Reitin pitkä nimi</th>
@@ -160,10 +160,9 @@
           <div class="modal-body" id="tripModalBody">
             <table class="table">
               <thead>
-                <th>ID</th>
+                <th>Tunnus</th>
                 <th>Päämäärä</th>
-                <th>Aloitus</th>
-                <th>Lopetus</th>
+                <th>Palvelutunnus</th>
                 <th>Pysäkit</th>
                 <th>Päivämäärät</th>
               </thead>
@@ -331,8 +330,7 @@
                   `<tr>
                     <td>${response[0][i].trip_id}</td>
                     <td>${response[0][i].trip_headsign}</td>
-                    <td>xx:xx</td>
-                    <td>xx:xx</td>
+                    <td>${response[0][i].service_id}</td>
                     <td><a onclick="getStops('${response[0][i].trip_id}', '${response[0][i].trip_headsign}');">Pysäkit</a></td>
                     <td><a onclick="getDates('${response[0][i].trip_id}');">Päivämäärät</a></td>
                   </tr>`
@@ -456,7 +454,6 @@
 
               polyline = L.polyline(latlngs, { color: '#337ab7', smoothFactor: 0.1 }).addTo(map);
               map.fitBounds(polyline.getBounds());
-              // map.setZoom(map.getZoom() - 1);
 
               map.addLayer(markers);
               map.addLayer(startEndMarkers);

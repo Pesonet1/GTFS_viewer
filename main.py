@@ -30,7 +30,7 @@ class Application(tornado.web.Application):
 
 def main():
     def fn():
-        print "Hooked before reloading..."
+        print "Reloading..."
 
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
