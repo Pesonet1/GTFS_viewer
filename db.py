@@ -1,3 +1,7 @@
+import time
+
+from threading import Timer, Thread, Event
+
 import sqlite3
 from sqlite3 import Error
 
@@ -14,9 +18,9 @@ def createDBConnection(db_file):
     return None
 
 def executeQuery(*args):
-    cursorobj = args[0].cursor()
-
     try:
+        cursorobj = args[0].cursor()
+
         if len(args) == 3: # 1 queryParam
             cursorobj.execute(args[1].format(args[2]))
         elif len(args) == 4: # 2 queryParam
@@ -28,11 +32,12 @@ def executeQuery(*args):
 
         result = cursorobj.fetchall()
         args[0].commit()
-    except Exception:
-        raise
-
-    args[0].close()
-    return result
+    except Exception as e:
+        args[0].rollback()
+        raise e
+    finally:
+        args[0].close()
+        return result
 
 
 # This function can be used for loading GTFS data in zip form... By default its location needs to be in root folder

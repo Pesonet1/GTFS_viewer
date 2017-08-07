@@ -25,11 +25,12 @@ class Routes(tornado.web.RequestHandler):
         )
 
     def post(self):
-        queryParam1 = self.get_argument("routeName").encode('utf-8')
-        queryParam2 = self.get_argument("routeID").encode('utf-8')
-        queryParam3 = self.get_argument("routeProvider").encode('utf-8')
-        queryParam4 = self.get_argument("routeShort").encode('utf-8')
-        response = self.executeRouteQuery(queryParam1, queryParam2, queryParam3, queryParam4)
+        response = self.executeRouteQuery(
+            self.get_argument("routeName").encode('utf-8'),
+            self.get_argument("routeID").encode('utf-8'),
+            self.get_argument("routeProvider").encode('utf-8'),
+            self.get_argument("routeShort").encode('utf-8')
+        )
 
         data = []
         for a, b, c, d, e in response:
@@ -40,17 +41,22 @@ class Routes(tornado.web.RequestHandler):
             item['route_long_name'] = d
             item['agency_url'] = e
             data.append(item)
-        # queryRoutes = json.dumps(data)
-        # queryRoutes = json.loads(queryRoutes)
 
         self.write(json.dumps(data))
 
     def executeRouteQuery(self, queryParam1, queryParam2, queryParam3, queryParam4):
+        #TODO if the connection timesout after 30 sec args[0].interrupt() the connection
+        # threads for connection, timer and excecution
+
         connection = createDBConnection("db.sqlite")
         statement = """
             SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
             FROM routes, agency
-            WHERE routes.agency_id = agency.agency_id AND route_long_name LIKE '%{0}%' AND route_id LIKE '%{1}%' AND agency_name LIKE '%{2}%' AND route_short_name LIKE '%{3}%'
+            WHERE routes.agency_id = agency.agency_id
+                AND route_long_name LIKE '%{0}%'
+                AND route_id LIKE '%{1}%'
+                AND agency_name LIKE '%{2}%'
+                AND route_short_name LIKE '%{3}%'
             ORDER BY route_id, agency_name, route_short_name
         """
         return executeQuery(connection, statement, queryParam1, queryParam2, queryParam3, queryParam4)
@@ -65,9 +71,10 @@ class Stops(tornado.web.RequestHandler):
         )
 
     def post(self):
-        queryParam1 = self.get_argument("stopID").encode('utf-8')
-        queryParam2 = self.get_argument("stopName").encode('utf-8')
-        response = self.executeStopQuery(queryParam1, queryParam2)
+        response = self.executeStopQuery(
+            self.get_argument("stopID").encode('utf-8'),
+            self.get_argument("stopName").encode('utf-8')
+        )
 
         data = []
         for a, b, c, d in response:
@@ -85,7 +92,8 @@ class Stops(tornado.web.RequestHandler):
         statement = """
             SELECT stop_id, stop_name, stop_lat, stop_lon
             FROM stops
-            WHERE stop_id LIKE '%{0}%' AND stop_name LIKE '%{1}%'
+            WHERE stop_id LIKE '%{0}%'
+                AND stop_name LIKE '%{1}%'
             ORDER BY stop_id
         """
         return executeQuery(connection, statement, queryParam1, queryParam2)
@@ -94,8 +102,7 @@ class Stops(tornado.web.RequestHandler):
 
 class StopRoutes(tornado.web.RequestHandler):
     def post(self):
-        queryParam1 = self.get_argument("stopID").encode('utf-8')
-        stopRoutes = self.executeStopRouteQuery(queryParam1)
+        stopRoutes = self.executeStopRouteQuery(self.get_argument("stopID").encode('utf-8'))
 
         stoproute_data = []
         for a, b, c in stopRoutes:
@@ -107,10 +114,11 @@ class StopRoutes(tornado.web.RequestHandler):
 
         self.write(json.dumps(stoproute_data))
 
+    #TODO modify this to be more efficient...
     def executeStopRouteQuery(self, queryParam):
         connection = createDBConnection("db.sqlite")
         statement = """
-            SELECT trips.route_id, route_short_name, route_long_name
+            SELECT DISTINCT trips.route_id, route_short_name, route_long_name
             FROM stop_times, trips, routes
             WHERE trips.trip_id = stop_times.trip_id
                 AND trips.route_id = routes.route_id
@@ -123,8 +131,7 @@ class StopRoutes(tornado.web.RequestHandler):
 
 class StopPassingTimes(tornado.web.RequestHandler):
     def post(self):
-        queryParam = self.get_argument("stopID").encode('utf-8')
-        passTimes = self.executeStopPasstimeQuery(queryParam)
+        passTimes = self.executeStopPasstimeQuery(self.get_argument("stopID").encode('utf-8'))
 
         passtimes_data = []
         for a, b, c in passTimes:
@@ -136,6 +143,7 @@ class StopPassingTimes(tornado.web.RequestHandler):
 
         self.write(json.dumps(passtimes_data))
 
+    #TODO modify this to be more efficient...
     def executeStopPasstimeQuery(self, queryParam):
         connection = createDBConnection("db.sqlite")
         statement = """
@@ -149,8 +157,7 @@ class StopPassingTimes(tornado.web.RequestHandler):
 
 class Trips(tornado.web.RequestHandler):
     def post(self):
-        queryParam = self.get_argument("routeID").encode('utf-8')
-        trips = self.executeTripQuery(queryParam)
+        trips = self.executeTripQuery(self.get_argument("routeID").encode('utf-8'))
 
         trip_data = []
         for a, b, c in trips:
@@ -184,8 +191,8 @@ class Trips(tornado.web.RequestHandler):
 
 class TripStops(tornado.web.RequestHandler):
     def post(self):
-        queryParam = self.get_argument("tripID").encode('utf-8')
-        response = self.executeTripStopsQuery(queryParam)
+        response = self.executeTripStopsQuery(self.get_argument("tripID").encode('utf-8'))
+
         data = []
         for a, b, c, d, e, f, g, h, i in response:
             item = {}
@@ -213,10 +220,10 @@ class TripStops(tornado.web.RequestHandler):
 
 
 
-class Dates(tornado.web.RequestHandler):
+class TripDates(tornado.web.RequestHandler):
     def post(self):
-        queryParam = self.get_argument("tripID").encode('utf-8')
-        response = self.executeDateQuery(queryParam)
+        response = self.executeDateQuery(self.get_argument("tripID").encode('utf-8'))
+
         data = []
         for a, b in response:
             item = {}
@@ -231,7 +238,8 @@ class Dates(tornado.web.RequestHandler):
         statement = """
             SELECT trips.trip_id, calendar_dates.date
             FROM trips, calendar_dates
-            WHERE trips.service_id = calendar_dates.service_id AND trips.trip_id IS '{0}'
+            WHERE trips.service_id = calendar_dates.service_id
+                AND trips.trip_id IS '{0}'
             ORDER BY calendar_dates.date
         """
         return executeQuery(connection, statement, queryParam)
@@ -240,9 +248,11 @@ class Dates(tornado.web.RequestHandler):
 
 class StopTimes(tornado.web.RequestHandler):
     def post(self):
-        queryParam1 = self.get_argument("tripID").encode('utf-8')
-        queryParam2 = self.get_argument("stopID").encode('utf-8')
-        response = self.executeStopTimesQuery(queryParam1, queryParam2)
+        response = self.executeStopTimesQuery(
+            self.get_argument("tripID").encode('utf-8'),
+            self.get_argument("stopID").encode('utf-8')
+        )
+
         data = []
         for a, b, c in response:
             item = {}
@@ -256,9 +266,9 @@ class StopTimes(tornado.web.RequestHandler):
     def executeStopTimesQuery(self, queryParam1, queryParam2):
         connection = createDBConnection("db.sqlite")
         statement = """
-            SELECT stop_times.stop_id, stop_times.arrival_time, stop_times.departure_time
+            SELECT stop_id, arrival_time, departure_time
             FROM stop_times
-            WHERE stop_times.trip_id IS '{0}' AND stop_times.stop_id IS '{1}'
-            ORDER BY stop_times.stop_id
+            WHERE trip_id IS '{0}' AND stop_id IS '{1}'
+            ORDER BY stop_id
         """
         return executeQuery(connection, statement, queryParam1, queryParam2)

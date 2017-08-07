@@ -17,7 +17,7 @@ class Application(tornado.web.Application):
             url(r"/stops", handlers.index.Stops),
             url(r"/trips", handlers.index.Trips),
             url(r"/tripStops", handlers.index.TripStops),
-            url(r"/dates", handlers.index.Dates),
+            url(r"/tripDates", handlers.index.TripDates),
             url(r"/stopTimes", handlers.index.StopTimes),
             url(r"/stopRoutes", handlers.index.StopRoutes),
             url(r"/stopPassingTimes", handlers.index.StopPassingTimes)

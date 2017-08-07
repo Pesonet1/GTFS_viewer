@@ -206,7 +206,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.1.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.0.6/leaflet.markercluster.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.0.6/leaflet.markercluster-src.js"></script>
 
     <script>
       var LAT = 65.304401;
@@ -287,8 +286,8 @@
               $("#map").hide();
               $('#tableContent').empty();
 
-              console.log('Kysely onnistui!')
-              response = JSON.parse("[" + res + "]")
+              console.log('Kysely onnistui!');
+              response = JSON.parse("[" + res + "]");
               console.log(response);
 
               if (response[0].length !== 0) {
@@ -483,7 +482,7 @@
 
       function getDates(trip_id) {
         $.ajax({
-          url: "/dates",
+          url: "/tripDates",
           type: "POST",
           data: { tripID: trip_id },
           timeout: TIMEOUT,
