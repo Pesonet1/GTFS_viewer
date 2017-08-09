@@ -134,11 +134,12 @@ class StopPassingTimes(tornado.web.RequestHandler):
         passTimes = self.executeStopPasstimeQuery(self.get_argument("stopID").encode('utf-8'))
 
         passtimes_data = []
-        for a, b, c in passTimes:
+        for a, b, c, d in passTimes:
             item = {}
             item['stop_id'] = a
-            item['arrival_time'] = b
-            item['departure_time'] = c
+            item['trip_id'] = b
+            item['arrival_time'] = c
+            item['departure_time'] = d
             passtimes_data.append(item)
 
         self.write(json.dumps(passtimes_data))
@@ -147,7 +148,7 @@ class StopPassingTimes(tornado.web.RequestHandler):
     def executeStopPasstimeQuery(self, queryParam):
         connection = createDBConnection("db.sqlite")
         statement = """
-            SELECT stop_id, arrival_time, departure_time
+            SELECT stop_id, trip_id, arrival_time, departure_time
             FROM stop_times
             WHERE stop_id IS '{0}'
         """
@@ -214,7 +215,8 @@ class TripStops(tornado.web.RequestHandler):
         statement = """
             SELECT stops.stop_id, stops.stop_name, stops.stop_lat, stops.stop_lon, stop_times.stop_sequence, stop_times.shape_dist_traveled, stop_times.trip_id, stop_times.arrival_time, stop_times.departure_time
             FROM stop_times, stops
-            WHERE stop_times.stop_id = stops.stop_id AND stop_times.trip_id IS '{0}'
+            WHERE stop_times.stop_id = stops.stop_id
+                AND stop_times.trip_id IS '{0}'
         """
         return executeQuery(connection, statement, queryParam)
 

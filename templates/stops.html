@@ -136,7 +136,7 @@
       var LAT = 65.304401;
       var LON = 24.301758;
       var ZOOM = 5;
-      var TIMEOUT = 30000;
+      var TIMEOUT = 60000;
 
       var map = L.map('map').setView([51.505, -0.09], 13);
 
@@ -264,6 +264,8 @@
       }
 
       function getStopRoutes(stop_id) {
+        $('#routeTableContent').empty();
+
         $.ajax({
           url: "/stopRoutes",
           type: "POST",
@@ -305,34 +307,36 @@
       }
 
       function getPassingTimes(stop_id) {
-        $.ajax({
-          url: "/stopPassingTimes",
-          type: "POST",
-          data: {
-            stopID: stop_id,
-          },
-          timeout: TIMEOUT,
-          cache: false,
+        alert("Ominaisuus ei ole vielä käytettävissä!");
 
-          success: (res) => {
-            // $('#routeModal').modal('show');
-
-            console.log('Kysely onnistui!');
-            response = JSON.parse("[" + res + "]")
-            console.log(response);
-
-            if (response[0].length !== 0) {
-            }
-          },
-
-          error: (jqXHR, textStatus) => {
-            if (textStatus === "timeout") {
-                alert("Pyynnössä kesti liian kauan");
-            } else {
-                alert("Tietojen hakemisessa tapahtui virhe");
-            }
-          }
-        });
+        // $.ajax({
+        //   url: "/stopPassingTimes",
+        //   type: "POST",
+        //   data: {
+        //     stopID: stop_id,
+        //   },
+        //   timeout: TIMEOUT,
+        //   cache: false,
+        //
+        //   success: (res) => {
+        //     // $('#routeModal').modal('show');
+        //
+        //     console.log('Kysely onnistui!');
+        //     response = JSON.parse("[" + res + "]")
+        //     console.log(response);
+        //
+        //     if (response[0].length !== 0) {
+        //     }
+        //   },
+        //
+        //   error: (jqXHR, textStatus) => {
+        //     if (textStatus === "timeout") {
+        //         alert("Pyynnössä kesti liian kauan");
+        //     } else {
+        //         alert("Tietojen hakemisessa tapahtui virhe");
+        //     }
+        //   }
+        // });
       }
      </script>
    </body>
