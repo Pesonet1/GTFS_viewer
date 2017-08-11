@@ -1,12 +1,18 @@
 import sqlite3
 from sqlite3 import Error
 
+import psycopg2
+from psycopg2 import connect
+
 # from gtfslib.dao import Dao
 # dao = Dao("db.sqlite")
 
 def createDBConnection(db_file):
     try:
-        conn = sqlite3.connect(db_file)
+        if db_file == "gtfs":
+            conn = connect(dbname="gtfs", user="postgres", host="localhost", password="postgres", connect_timeout=20)
+        else:
+            conn = sqlite3.connect(db_file)
         return conn
     except Error as e:
         print(e)
@@ -35,6 +41,8 @@ def executeQuery(*args):
         args[0].close()
         return result
 
+# db load url postgresql://postgres:postgres@localhost:5432/gtfs
+# gtfsdb-load --database_url postgresql://postgres:postgres@localhost:5432/gtfs matka.zip
 
 # This function can be used for loading GTFS data in zip form... By default its location needs to be in root folder
 # def load_gtfs(GTFS_filename):
@@ -42,7 +50,7 @@ def executeQuery(*args):
 #
 # def createValluTable():
 #     conn = createDBConnection("vallu.sqlite")
-#     cur = conection.cursor()
+#     cur = conn.cursor()
 #     cur.execute("CREATE TABLE vallu_vuorot (lu_viranro_myontaa, viranomaisnimi, lu_viranro_valvoo, viranomaisnimi_1, lu_voim_pvm, lu_lop_pvm, lu_tod_loppvm, lupasoptunnus, muokattu_pvm, liikharjnro, liikharj_nimi, reittinro_pysyva, reittinimi, ajosuunta, linjan_tunnus, reitti_voimaan_pvm, reitti_paattyy_pvm, reittia_muokattu_pvm, vuorotunniste_pysyva, vuoromerk, lahtoaika, perilla, kausi, vuorotyyppi, vuoro_lisatunniste, vuoro_voimaan_pvm, vuoro_paattyy_pvm, vuoroa_muokattu_pvm, kasitelty_koontikartassa, siirtyy_matka_fi, vuoron_url_interpoloitu);")
 #
 #     conn.commit()

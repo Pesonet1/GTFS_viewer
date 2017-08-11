@@ -19,24 +19,6 @@
         margin: 5px;
       }
 
-      #tripModalFlow {
-        height: 600px;
-        width: 850px;
-        margin-left: -110px;
-      }
-
-      #tripModalBody {
-        height: 465px;
-        overflow-y: auto;
-      }
-
-      #calendarModalFlow {
-        height: 435px;
-        width: 1200px;
-        margin-left: -300px;
-        overflow-y: auto;
-      }
-
       #map {
         position: absolute;
         width: 100%;
@@ -66,6 +48,23 @@
         border-radius: 15px;
         border: 1px solid #2e6da4;
         padding: 20px;
+      }
+
+      #tripModalFlow {
+        height: 600px;
+        width: 850px;
+        margin-left: -110px;
+      }
+
+      #tripModalBody {
+        height: 465px;
+        overflow-y: auto;
+      }
+
+      #calendarModalFlow {
+        height: 435px;
+        width: 1200px;
+        margin-left: -300px;
       }
 
       #calendarModalBody {
@@ -211,7 +210,7 @@
       var LAT = 65.304401;
       var LON = 24.301758;
       var ZOOM = 5;
-      var TIMEOUT = 60000;
+      var TIMEOUT = 20000;
 
       var map = L.map('map').setView([51.505, -0.09], 13);
 
@@ -381,32 +380,7 @@
 
             if (response[0].length !== 0) {
               for (i = 0; i < response[0].length; i++) {
-                var aHours = 0; var dHours = 0;
-                var aMinutes = 0; var dMinutes = 0;
                 var newIcon = null;
-
-                if (response[0][i].arrival_time !== null) {
-                  aMinutes = response[0][i].arrival_time / 60;
-                  aHours = Math.floor(aMinutes / 60);
-                  if (aHours >= 24) { aHours = aHours - 24; }
-                  aMinutes = Math.ceil((aMinutes / 60 - Math.floor(aMinutes / 60)) * 60)
-                  if (aMinutes < 10 ) { aMinutes = '0' + aMinutes.toString() }
-                } else {
-                  aHours = '-'; aMinutes = '-';
-                }
-
-                if (response[0][i].departure_time !== null) {
-                  dMinutes = response[0][i].departure_time / 60;
-                  dHours = Math.floor(dMinutes / 60);
-                  if (dHours >= 24) { dHours = dHours - 24; }
-                  dMinutes = Math.ceil((dMinutes / 60 - Math.floor(dMinutes / 60)) * 60)
-                  if (dMinutes < 10) { dMinutes = '0' + dMinutes.toString(); }
-                } else {
-                  dHours = '-'; dMinutes = '-';
-                }
-
-                var dec = (response[0][i].shape_dist_traveled / 1000 - Math.floor(response[0][i].shape_dist_traveled / 1000)).toString().substring(1, 5);
-                var distance = Math.floor(Math.floor(response[0][i].shape_dist_traveled / 1000)).toString() + dec;
 
                 if (i === 0) {
                   newIcon = new L.Icon({
@@ -441,14 +415,13 @@
                   <b>Määränpää: </b>${trip_headsign}<br /><br />
 
                   <b>Pysäkkiketju: </b>${response[0][i].stop_sequence}<br />
-                  <b>Taitettu matka: </b>${distance}km<br />
-                  <b>Saapumisaika: </b>${aHours}:${aMinutes}<br />
-                  <b>Lähtöaika: </b>${dHours}:${dMinutes}<br/><br />
+                  <b>Saapumisaika: </b>${response[0][i].arrival_time.substring(0, 5)}<br />
+                  <b>Lähtöaika: </b>${response[0][i].departure_time.substring(0, 5)}<br/><br />
 
                   <b>Pysäkin tunniste: </b>${response[0][i].stop_id}<br />
                   <b>Pysäkin nimi: </b>${response[0][i].stop_name}<br />
-                  <b>Lat-koordinaatti: </b>${response[0][i].stop_lat}<br />
-                  <b>Lon-koordinaatti: </b>${response[0][i].stop_lon}<br />`
+                  <b>Lat-koordinaatti: </b>${response[0][i].stop_lat.substring(0, 6)}<br />
+                  <b>Lng-koordinaatti: </b>${response[0][i].stop_lon.substring(0, 6)}<br />`
                 );
                 latlngs.push(marker.getLatLng());
 

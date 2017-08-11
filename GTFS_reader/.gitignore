@@ -1,7 +1,0 @@
-.settings/
-.project
-.pydevproject
-gtfslib.egg-info/
-**/*.pyc
-**/*.sqlite
-/*.gtfs.zip

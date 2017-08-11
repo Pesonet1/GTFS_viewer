@@ -1,6 +1,9 @@
 /GTFS_data
 /unnecessary
 
+/gtfslib-python
+/gtfsdb
+
 *.pyc
 
 db.sqlite
