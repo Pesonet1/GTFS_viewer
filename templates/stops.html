@@ -206,6 +206,8 @@
                 <th>Päämäärä</th>
                 <th>Palvelutunnus</th>
                 <th>Päivämäärät</th>
+                <th>Aloitus</th>
+                <th>Lopetus</th>
               </thead>
               <tbody id="routeTripTableContent">
               </tbody>
@@ -243,7 +245,7 @@
       var LAT = 65.304401;
       var LON = 24.301758;
       var ZOOM = 5;
-      var TIMEOUT = 20000;
+      var TIMEOUT = 30000;
 
       var map = L.map('map').setView([51.505, -0.09], 13);
 
@@ -334,8 +336,7 @@
                     <b>Pysäkin nimi: </b>${response[0][i].stop_name}<br /><br />
                     <b>Lat-koordinaatti: </b>${response[0][i].stop_lat}<br />
                     <b>Lon-koordinaatti: </b>${response[0][i].stop_lon}<br /><br />
-                    <a onclick="getStopRoutes('${response[0][i].stop_id}');">Pysäkin kautta kulkevat reitit</a><br/>
-                    <a onclick="getPassingTimes('${response[0][i].stop_id}');">Pysäkin ohitusajat</a>`,
+                    <a onclick="getStopRoutes('${response[0][i].stop_id}');">Pysäkin kautta kulkevat reitit</a><br/>`,
                     { minWidth: 350, minHeight: 400 }
                   );
 
@@ -392,7 +393,7 @@
               for (i = 0; i < response[0].length; i++) {
                 $("#routeTableContent").append(
                   `<tr>
-                    <td><a onclick="getRouteTrips('${response[0][i].route_id}');">${response[0][i].route_id}</a></td>
+                    <td><a onclick="getRouteTrips('${stop_id}', '${response[0][i].route_id}');">${response[0][i].route_id}</a></td>
                     <td>${response[0][i].route_short_name}</td>
                     <td>${response[0][i].route_long_name}</td>
                   </tr>`
@@ -412,14 +413,15 @@
         });
       }
 
-      function getRouteTrips(route_id) {
+      function getRouteTrips(stop_id, route_id) {
         $('#routeTripTableContent').empty();
 
         $.ajax({
-          url: "/trips",
+          url: "/stopTrips",
           type: "POST",
           data: {
-            routeID: route_id,
+            stopID: stop_id,
+            routeID: route_id
           },
           timeout: TIMEOUT,
           cache: false,
@@ -439,6 +441,8 @@
                     <td>${response[0][i].trip_headsign}</td>
                     <td>${response[0][i].service_id}</td>
                     <td><a onclick="getDates('${response[0][i].trip_id}');">Päivämäärät</a></td>
+                    <td>${response[0][i].arrival_time}</td>
+                    <td>${response[0][i].departure_time}</td>
                   </tr>`
                 )
               }
@@ -549,38 +553,6 @@
             }
           }
         });
-      }
-
-      function getPassingTimes(stop_id) {
-        alert('Toiminnallisuutta ei ole vielä toteutettu!');
-        // $.ajax({
-        //   url: "/stopPassingTimes",
-        //   type: "POST",
-        //   data: {
-        //     stopID: stop_id,
-        //   },
-        //   timeout: TIMEOUT,
-        //   cache: false,
-        //
-        //   success: (res) => {
-        //     // $('#routeModal').modal('show');
-        //
-        //     console.log('Kysely onnistui!');
-        //     response = JSON.parse("[" + res + "]")
-        //     console.log(response);
-        //
-        //     if (response[0].length !== 0) {
-        //     }
-        //   },
-        //
-        //   error: (jqXHR, textStatus) => {
-        //     if (textStatus === "timeout") {
-        //         alert("Pyynnössä kesti liian kauan");
-        //     } else {
-        //         alert("Tietojen hakemisessa tapahtui virhe");
-        //     }
-        //   }
-        // });
       }
      </script>
    </body>

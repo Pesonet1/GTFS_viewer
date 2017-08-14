@@ -124,29 +124,36 @@ class StopRoutes(tornado.web.RequestHandler):
 
 
 
-class StopPassingTimes(tornado.web.RequestHandler):
+class StopTrips(tornado.web.RequestHandler):
     def post(self):
-        passTimes = self.executeStopPasstimeQuery(self.get_argument("stopID").encode('utf-8'))
+        trips = self.executeTripQuery(
+            self.get_argument("routeID").encode('utf-8'),
+            self.get_argument("stopID").encode('utf-8')
+        )
 
-        passtimes_data = []
-        for a, b, c, d in passTimes:
+        trip_data = []
+        for a, b, c, d, e in trips:
             item = {}
-            item['stop_id'] = a
-            item['trip_id'] = b
-            item['arrival_time'] = str(c)
-            item['departure_time'] = str(d)
-            passtimes_data.append(item)
+            item['trip_id'] = a
+            item['trip_headsign'] = b
+            item['service_id'] = c
+            item['arrival_time'] = str(d)
+            item['departure_time'] = str(e)
+            trip_data.append(item)
 
-        self.write(json.dumps(passtimes_data))
+        self.write(json.dumps(trip_data))
 
-    def executeStopPasstimeQuery(self, queryParam):
+    def executeTripQuery(self, queryParam1, queryParam2):
         connection = createDBConnection(db_name)
         statement = """
-            SELECT stop_id, trip_id, arrival_time, departure_time
-            FROM stop_times
-            WHERE stop_id = '{0}'
+            SELECT trips.trip_id, trip_headsign, service_id, arrival_time, departure_time
+            FROM trips, stop_times
+            WHERE route_id = '{0}'
+                AND stop_id = '{1}'
+                AND trips.trip_id = stop_times.trip_id
+            ORDER BY arrival_time, departure_time
         """
-        return executeQuery(connection, statement, queryParam)
+        return executeQuery(connection, statement, queryParam1, queryParam2)
 
 
 
@@ -180,7 +187,6 @@ class TripStops(tornado.web.RequestHandler):
         response = self.executeTripStopsQuery(self.get_argument("tripID").encode('utf-8'))
 
         data = []
-        print response
         for a, b, c, d, e, f, g, h in response:
             item = {}
             item['stop_id'] = a
@@ -230,33 +236,3 @@ class TripDates(tornado.web.RequestHandler):
             ORDER BY universal_calendar.date
         """
         return executeQuery(connection, statement, queryParam)
-
-
-
-class StopTimes(tornado.web.RequestHandler):
-    def post(self):
-        response = self.executeStopTimesQuery(
-            self.get_argument("tripID").encode('utf-8'),
-            self.get_argument("stopID").encode('utf-8')
-        )
-
-        data = []
-        for a, b, c in response:
-            item = {}
-            item['stop_id'] = a
-            item['arrival_time'] = str(b)
-            item['departure_time'] = str(c)
-            data.append(item)
-
-        self.write(json.dumps(data))
-
-    def executeStopTimesQuery(self, queryParam1, queryParam2):
-        connection = createDBConnection(db_name)
-        statement = """
-            SELECT stop_id, arrival_time, departure_time
-            FROM stop_times
-            WHERE trip_id = '{0}'
-                AND stop_id = '{1}'
-            ORDER BY stop_id
-        """
-        return executeQuery(connection, statement, queryParam1, queryParam2)

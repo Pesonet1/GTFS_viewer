@@ -210,7 +210,7 @@
       var LAT = 65.304401;
       var LON = 24.301758;
       var ZOOM = 5;
-      var TIMEOUT = 20000;
+      var TIMEOUT = 30000;
 
       var map = L.map('map').setView([51.505, -0.09], 13);
 
@@ -415,13 +415,13 @@
                   <b>Määränpää: </b>${trip_headsign}<br /><br />
 
                   <b>Pysäkkiketju: </b>${response[0][i].stop_sequence}<br />
-                  <b>Saapumisaika: </b>${response[0][i].arrival_time.substring(0, 5)}<br />
-                  <b>Lähtöaika: </b>${response[0][i].departure_time.substring(0, 5)}<br/><br />
+                  <b>Saapumisaika: </b>${response[0][i].arrival_time}<br />
+                  <b>Lähtöaika: </b>${response[0][i].departure_time}<br/><br />
 
                   <b>Pysäkin tunniste: </b>${response[0][i].stop_id}<br />
                   <b>Pysäkin nimi: </b>${response[0][i].stop_name}<br />
-                  <b>Lat-koordinaatti: </b>${response[0][i].stop_lat.substring(0, 6)}<br />
-                  <b>Lng-koordinaatti: </b>${response[0][i].stop_lon.substring(0, 6)}<br />`
+                  <b>Lat-koordinaatti: </b>${response[0][i].stop_lat}<br />
+                  <b>Lng-koordinaatti: </b>${response[0][i].stop_lon}<br />`
                 );
                 latlngs.push(marker.getLatLng());
 

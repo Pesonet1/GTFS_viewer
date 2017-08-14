@@ -10,7 +10,7 @@ from psycopg2 import connect
 def createDBConnection(db_file):
     try:
         if db_file == "gtfs":
-            conn = connect(dbname="gtfs", user="postgres", host="localhost", password="postgres", connect_timeout=20)
+            conn = connect(dbname="gtfs", user="postgres", host="localhost", password="postgres", connect_timeout=30)
         else:
             conn = sqlite3.connect(db_file)
         return conn
