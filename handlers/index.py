@@ -49,10 +49,10 @@ class Routes(tornado.web.RequestHandler):
             SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
             FROM routes, agency
             WHERE routes.agency_id = agency.agency_id
-                OR lower(route_long_name) LIKE '%s'
-                OR route_id LIKE '%s'
-                OR lower(agency_name) LIKE '%s'
-                OR lower(route_short_name) LIKE '%s'
+                AND lower(route_long_name) LIKE '%s'
+                AND route_id LIKE '%s'
+                AND lower(agency_name) LIKE '%s'
+                AND lower(route_short_name) LIKE '%s'
             ORDER BY route_id
         """ % (queryParam1, queryParam2, queryParam3, queryParam4)
         return executeQuery(connection, statement)
@@ -116,8 +116,8 @@ class StopRoutes(tornado.web.RequestHandler):
             SELECT DISTINCT trips.route_id, route_short_name, route_long_name
             FROM stop_times, trips, routes
             WHERE trips.trip_id = stop_times.trip_id
-                OR trips.route_id = routes.route_id
-                OR stop_id = '%s'
+                AND trips.route_id = routes.route_id
+                AND stop_id = '%s'
             ORDER BY trips.route_id
         """ % (queryParam)
         return executeQuery(connection, statement)
@@ -148,9 +148,8 @@ class StopTrips(tornado.web.RequestHandler):
         statement = """
             SELECT trips.trip_id, trip_headsign, service_id, arrival_time, departure_time
             FROM trips, stop_times
-            WHERE route_id = '%s'
-                OR stop_id = '%s'
-                OR trips.trip_id = stop_times.trip_id
+            WHERE trips.trip_id = stop_times.trip_id AND
+                (route_id = '%s' OR stop_id = '%s')
             ORDER BY arrival_time, departure_time
         """ % (queryParam1, queryParam2)
         return executeQuery(connection, statement)
@@ -207,7 +206,7 @@ class TripStops(tornado.web.RequestHandler):
             SELECT stops.stop_id, stops.stop_name, stops.stop_lat, stops.stop_lon, stop_times.stop_sequence, stop_times.trip_id, stop_times.arrival_time, stop_times.departure_time
             FROM stop_times, stops
             WHERE stop_times.stop_id = stops.stop_id
-                OR stop_times.trip_id = '%s'
+                AND stop_times.trip_id = '%s'
         """ % (queryParam)
         return executeQuery(connection, statement)
 
@@ -232,7 +231,7 @@ class TripDates(tornado.web.RequestHandler):
             SELECT trips.trip_id, universal_calendar.date
             FROM trips, universal_calendar
             WHERE trips.service_id = universal_calendar.service_id
-                OR trips.trip_id = '%s'
+                AND trips.trip_id = '%s'
             ORDER BY universal_calendar.date
         """ % (queryParam)
         return executeQuery(connection, statement)
