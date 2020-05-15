@@ -16,24 +16,18 @@ def createDBConnection(db_file):
 
     return None
 
-def executeQuery(*args):
+def executeQuery(connection, query):
+    result = None
+
     try:
-        cursorobj = args[0].cursor()
-
-        if len(args) == 3: # 1 queryParam
-            cursorobj.execute(args[1].format(args[2]))
-        elif len(args) == 4: # 2 queryParam
-            cursorobj.execute(args[1].format(args[2], args[3]))
-        elif len(args) == 5: # 3 queryParam
-            cursorobj.execute(args[1].format(args[2], args[3], args[4]))
-        elif len(args) == 6: # 4 queryParam
-            cursorobj.execute(args[1].format(args[2], args[3], args[4], args[5]))
-
+        cursorobj = connection.cursor()
+        cursorobj.execute(query)
         result = cursorobj.fetchall()
-        args[0].commit()
+        connection.commit()
     except Exception as e:
-        args[0].rollback()
+        print(e)
+        connection.rollback()
         raise e
     finally:
-        args[0].close()
+        connection.close()
         return result

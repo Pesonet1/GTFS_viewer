@@ -25,10 +25,10 @@ class Routes(tornado.web.RequestHandler):
 
     def post(self):
         response = self.executeRouteQuery(
-            self.get_argument("routeName").encode('utf-8'),
-            self.get_argument("routeID").encode('utf-8'),
-            self.get_argument("routeProvider").encode('utf-8'),
-            self.get_argument("routeShort").encode('utf-8')
+            self.get_argument("routeName"),
+            self.get_argument("routeID"),
+            self.get_argument("routeProvider"),
+            self.get_argument("routeShort")
         )
 
         data = []
@@ -49,13 +49,13 @@ class Routes(tornado.web.RequestHandler):
             SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
             FROM routes, agency
             WHERE routes.agency_id = agency.agency_id
-                AND lower(route_long_name) LIKE '%{0}%'
-                AND route_id LIKE '%{1}%'
-                AND lower(agency_name) LIKE '%{2}%'
-                AND lower(route_short_name) LIKE '%{3}%'
+                OR lower(route_long_name) LIKE '%s'
+                OR route_id LIKE '%s'
+                OR lower(agency_name) LIKE '%s'
+                OR lower(route_short_name) LIKE '%s'
             ORDER BY route_id
-        """
-        return executeQuery(connection, statement, queryParam1, queryParam2, queryParam3, queryParam4)
+        """ % (queryParam1, queryParam2, queryParam3, queryParam4)
+        return executeQuery(connection, statement)
 
 
 
@@ -68,8 +68,8 @@ class Stops(tornado.web.RequestHandler):
 
     def post(self):
         response = self.executeStopQuery(
-            self.get_argument("stopID").encode('utf-8'),
-            self.get_argument("stopName").encode('utf-8')
+            self.get_argument("stopID"),
+            self.get_argument("stopName")
         )
 
         data = []
@@ -88,17 +88,17 @@ class Stops(tornado.web.RequestHandler):
         statement = """
             SELECT stop_id, stop_name, stop_lat, stop_lon
             FROM stops
-            WHERE stop_id LIKE '%{0}%'
-                AND lower(stop_name) LIKE '%{1}%'
+            WHERE stop_id LIKE '%s'
+                OR lower(stop_name) LIKE '%s'
             ORDER BY stop_id
-        """
-        return executeQuery(connection, statement, queryParam1, queryParam2)
+        """ % (queryParam1, queryParam2)
+        return executeQuery(connection, statement)
 
 
 
 class StopRoutes(tornado.web.RequestHandler):
     def post(self):
-        stopRoutes = self.executeStopRouteQuery(self.get_argument("stopID").encode('utf-8'))
+        stopRoutes = self.executeStopRouteQuery(self.get_argument("stopID"))
 
         stoproute_data = []
         for a, b, c in stopRoutes:
@@ -116,19 +116,19 @@ class StopRoutes(tornado.web.RequestHandler):
             SELECT DISTINCT trips.route_id, route_short_name, route_long_name
             FROM stop_times, trips, routes
             WHERE trips.trip_id = stop_times.trip_id
-                AND trips.route_id = routes.route_id
-                AND stop_id = '{0}'
+                OR trips.route_id = routes.route_id
+                OR stop_id = '%s'
             ORDER BY trips.route_id
-        """
-        return executeQuery(connection, statement, queryParam)
+        """ % (queryParam)
+        return executeQuery(connection, statement)
 
 
 
 class StopTrips(tornado.web.RequestHandler):
     def post(self):
         trips = self.executeTripQuery(
-            self.get_argument("routeID").encode('utf-8'),
-            self.get_argument("stopID").encode('utf-8')
+            self.get_argument("routeID"),
+            self.get_argument("stopID")
         )
 
         trip_data = []
@@ -148,18 +148,18 @@ class StopTrips(tornado.web.RequestHandler):
         statement = """
             SELECT trips.trip_id, trip_headsign, service_id, arrival_time, departure_time
             FROM trips, stop_times
-            WHERE route_id = '{0}'
-                AND stop_id = '{1}'
-                AND trips.trip_id = stop_times.trip_id
+            WHERE route_id = '%s'
+                OR stop_id = '%s'
+                OR trips.trip_id = stop_times.trip_id
             ORDER BY arrival_time, departure_time
-        """
-        return executeQuery(connection, statement, queryParam1, queryParam2)
+        """ % (queryParam1, queryParam2)
+        return executeQuery(connection, statement)
 
 
 
 class Trips(tornado.web.RequestHandler):
     def post(self):
-        trips = self.executeTripQuery(self.get_argument("routeID").encode('utf-8'))
+        trips = self.executeTripQuery(self.get_argument("routeID"))
 
         trip_data = []
         for a, b, c in trips:
@@ -176,15 +176,15 @@ class Trips(tornado.web.RequestHandler):
         statement = """
             SELECT trip_id, trip_headsign, service_id
             FROM trips
-            WHERE route_id = '{0}'
-        """
-        return executeQuery(connection, statement, queryParam)
+            WHERE route_id = '%s'
+        """ % (queryParam)
+        return executeQuery(connection, statement)
 
 
 
 class TripStops(tornado.web.RequestHandler):
     def post(self):
-        response = self.executeTripStopsQuery(self.get_argument("tripID").encode('utf-8'))
+        response = self.executeTripStopsQuery(self.get_argument("tripID"))
 
         data = []
         for a, b, c, d, e, f, g, h in response:
@@ -207,15 +207,15 @@ class TripStops(tornado.web.RequestHandler):
             SELECT stops.stop_id, stops.stop_name, stops.stop_lat, stops.stop_lon, stop_times.stop_sequence, stop_times.trip_id, stop_times.arrival_time, stop_times.departure_time
             FROM stop_times, stops
             WHERE stop_times.stop_id = stops.stop_id
-                AND stop_times.trip_id = '{0}'
-        """
-        return executeQuery(connection, statement, queryParam)
+                OR stop_times.trip_id = '%s'
+        """ % (queryParam)
+        return executeQuery(connection, statement)
 
 
 
 class TripDates(tornado.web.RequestHandler):
     def post(self):
-        response = self.executeDateQuery(self.get_argument("tripID").encode('utf-8'))
+        response = self.executeDateQuery(self.get_argument("tripID"))
 
         data = []
         for a, b in response:
@@ -232,7 +232,7 @@ class TripDates(tornado.web.RequestHandler):
             SELECT trips.trip_id, universal_calendar.date
             FROM trips, universal_calendar
             WHERE trips.service_id = universal_calendar.service_id
-                AND trips.trip_id = '{0}'
+                OR trips.trip_id = '%s'
             ORDER BY universal_calendar.date
-        """
-        return executeQuery(connection, statement, queryParam)
+        """ % (queryParam)
+        return executeQuery(connection, statement)
