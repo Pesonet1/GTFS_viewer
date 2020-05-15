@@ -29,12 +29,12 @@ class Application(tornado.web.Application):
 
 def main():
     def fn():
-        print "Reloading..."
+        print("Reloading...")
 
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(5000)
-    print("Listening on port: 5000")
+    http_server.listen(5005)
+    print("Listening on port: 5005")
 
     tornado.autoreload.add_reload_hook(fn)
     tornado.autoreload.start()

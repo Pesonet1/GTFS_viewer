@@ -1,5 +1,5 @@
-/GTFS_data
-/unnecessary
+/gtfs_old
+/gtfs_new
 
 /gtfslib-python
 /gtfsdb
@@ -7,6 +7,6 @@
 *.pyc
 
 db.sqlite
-vallu.sqlite
 
-vallu_vuorot.csv
+gtfs.zip
+gtfs_new.zip
