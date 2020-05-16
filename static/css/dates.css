@@ -1,0 +1,55 @@
+#calendarModalFlow {
+  height: 435px;
+  width: 1200px;
+  margin-left: -300px;
+}
+
+#calendarModalBody {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+#calendarTable {
+  margin: 5px 0 20px 0;
+}
+
+#calendarTable tr {
+  display: inline-block;
+}
+
+[id^=calendarHead] th {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  background-color: lightgrey;
+  margin: 1px;
+  font-size: 14px;
+  text-align: center;
+  line-height: 25px;
+  vertical-align: middle;
+}
+
+[id^=calendarBody] td {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  background-color: lightgrey;
+  margin: 1px;
+  font-size: 14px;
+  text-align: center;
+  line-height: 25px;
+  vertical-align: middle;
+}
+
+#markedDate {
+  background-color: #6af76c !important;
+}
+
+#headInfo {
+  width: 85px !important;
+}
+
+#bodyInfo {
+  width: 85px !important;
+}

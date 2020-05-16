@@ -1,4 +1,5 @@
 import os
+import signal
 
 import tornado.ioloop
 import tornado.httpserver
@@ -27,9 +28,21 @@ class Application(tornado.web.Application):
         )
         tornado.web.Application.__init__(self, routes, **settings)
 
+def sig_handler(sig, frame):
+    tornado.ioloop.IOLoop.instance().add_callback(shutdown)
+
+def shutdown():
+    print('Stopping http server')
+    http_server.stop()
+    io_loop = tornado.ioloop.IOLoop.instance()
+    io_loop.stop()
+    print('Shutdown')
+
 def main():
     def fn():
         print("Reloading...")
+
+    global http_server
 
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
@@ -38,6 +51,10 @@ def main():
 
     tornado.autoreload.add_reload_hook(fn)
     tornado.autoreload.start()
+
+    signal.signal(signal.SIGTERM, sig_handler)
+    signal.signal(signal.SIGINT, sig_handler)
+
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == "__main__":

@@ -1,0 +1,61 @@
+#header {
+  margin: 5px;
+  height: 125px;
+}
+
+#tableDiv {
+  margin: 5px;
+}
+
+#map {
+  position: absolute;
+  width: 100%;
+  height: calc(100% - 130px);
+  bottom: 0px;
+}
+
+#loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  -moz-transform: translateX(-50%) translateY(-50%);
+  -webkit-transform: translateX(-50%) translateY(-50%);
+  transform: translateX(-50%) translateY(-50%);
+  z-index: 1000;
+}
+
+#loadingDiv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  width: 220px;
+  border: 1px solid;
+  color: white;
+  background-color: #337ab7;
+  border-radius: 15px;
+  border: 1px solid #2e6da4;
+  padding: 20px;
+}
+
+#routeModalFlow {
+  height: 600px;
+  width: 850px;
+  margin-left: -110px;
+}
+
+#routeModalBody {
+  height: 465px;
+  overflow-y: auto;
+}
+
+#routeTripModalFlow {
+  height: 600px;
+  width: 850px;
+  margin-left: -110px;
+}
+
+#routeTripModalBody {
+  height: 465px;
+  overflow-y: auto;
+}

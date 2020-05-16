@@ -25,9 +25,7 @@ class Routes(tornado.web.RequestHandler):
 
     def post(self):
         response = self.executeRouteQuery(
-            self.get_argument("routeName"),
             self.get_argument("routeID"),
-            self.get_argument("routeProvider"),
             self.get_argument("routeShort")
         )
 
@@ -43,18 +41,40 @@ class Routes(tornado.web.RequestHandler):
 
         self.write(json.dumps(data))
 
-    def executeRouteQuery(self, queryParam1, queryParam2, queryParam3, queryParam4):
+    def executeRouteQuery(self, queryParam1, queryParam2):
         connection = createDBConnection(db_name)
-        statement = """
-            SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
-            FROM routes, agency
-            WHERE routes.agency_id = agency.agency_id
-                AND lower(route_long_name) LIKE '%s'
-                AND route_id LIKE '%s'
-                AND lower(agency_name) LIKE '%s'
-                AND lower(route_short_name) LIKE '%s'
-            ORDER BY route_id
-        """ % (queryParam1, queryParam2, queryParam3, queryParam4)
+
+        statement = None
+
+        if len(queryParam1) > 0 and len(queryParam2) > 0:
+            statement = """
+                SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
+                FROM routes, agency
+                WHERE routes.agency_id = agency.agency_id
+                    AND route_id LIKE '%s'
+                    AND route_short_name LIKE '%s'
+                ORDER BY route_id
+            """ % (queryParam1, queryParam2)
+
+        if len(queryParam1) > 0 and len(queryParam2) == 0:
+            statement = """
+                SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
+                FROM routes, agency
+                WHERE routes.agency_id = agency.agency_id
+                    AND route_id LIKE '%s'
+                ORDER BY route_id
+            """ % (queryParam1)
+
+        if len(queryParam1) == 0 and len(queryParam2) > 0:
+            statement = """
+                SELECT route_id, agency_name, route_short_name, route_long_name, agency_url
+                FROM routes, agency
+                WHERE routes.agency_id = agency.agency_id
+                    AND route_short_name LIKE '%s'
+                ORDER BY route_id
+            """ % (queryParam2)
+
+        print(statement)
         return executeQuery(connection, statement)
 
 
@@ -89,9 +109,9 @@ class Stops(tornado.web.RequestHandler):
             SELECT stop_id, stop_name, stop_lat, stop_lon
             FROM stops
             WHERE stop_id LIKE '%s'
-                OR lower(stop_name) LIKE '%s'
+                OR stop_name LIKE '%s'
             ORDER BY stop_id
-        """ % (queryParam1, queryParam2)
+        """ % (queryParam1, queryParam2.lower())
         return executeQuery(connection, statement)
 
 
